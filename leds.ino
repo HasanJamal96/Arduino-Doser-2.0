@@ -60,11 +60,36 @@ void FadeLeds(){
 }
 
 uint8_t bit_set = 0;
+uint8_t bit_set_x = 0;
+uint8_t complete_sec = 0;
+byte chase_l = 0;
+byte chase_h = 0;
+
 
 void ChaseLeds(){
   digitalWrite(LEDoe, LOW);
-  byte chase_l = 0;
-  byte chase_h = 0;
+  if(isDosing){
+    if(bit_set < 8){
+      bitSet(chase_l, bit_set);
+      bit_set_x = chase_h = 0;
+      bit_set += 1;
+    }
+    else{
+      if(bit_set_x < 8){
+        bitSet(chase_h, bit_set_x);
+        chase_l = 0;
+        bit_set_x += 1;
+      }
+      else{
+        bit_set = 0;
+        bit_set_x = 0;
+      }
+    }
+    SetLeds(chase_l, chase_h);
+    return;
+  }
+  chase_l = 0;
+  chase_h = 0;
   if(bit_set < 8){
     bitSet(chase_l, bit_set);
     bitSet(chase_h, 7-bit_set);

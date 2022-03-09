@@ -332,40 +332,46 @@ void DisplayScheduleScreen(){
 }
 
 
+void getLiquidLeds(uint8_t SL){
+  if(SL == 0){
+    Bled1 = 3;
+    Bled2 = 4;
+  }
+  else if(SL == 1){
+    Bled1 = 5;
+    Bled2 = 6;
+  }
+  else if(SL == 2){
+    Bled1 = 7;
+    Bled2 = 8;
+  }
+  else if(SL == 3){
+    Bled1 = 9;
+    Bled2 = 10;
+  }
+  else if(SL == 4){
+    Bled1 = 11;
+    Bled2 = 12;
+  }
+  else if(SL == 5){
+    Bled1 = 13;
+    Bled2 = 14;
+  }
+  else if(SL == 6){
+    Bled1 = 1;
+    Bled2 = 2;
+  }
+}
+
+
 void ReadScheduleScreen(){
   char key = GetKey();
   if(key != '-'){
     if(key == '#'){
       last_selected_liquid = selected_liquid+scroll_pos;
       LEDs_Status = "Blink";
-      if(last_selected_liquid == 0){
-        Bled1 = 3;
-        Bled2 = 4;
-      }
-      else if(last_selected_liquid == 1){
-        Bled1 = 5;
-        Bled2 = 6;
-      }
-      else if(last_selected_liquid == 2){
-        Bled1 = 7;
-        Bled2 = 8;
-      }
-      else if(last_selected_liquid == 3){
-        Bled1 = 9;
-        Bled2 = 10;
-      }
-      else if(last_selected_liquid == 4){
-        Bled1 = 11;
-        Bled2 = 12;
-      }
-      else if(last_selected_liquid == 5){
-        Bled1 = 13;
-        Bled2 = 14;
-      }
-      else if(last_selected_liquid == 6){
-        Bled1 = 1;
-        Bled2 = 2;
-      }
+      getLiquidLeds(last_selected_liquid);
+     
       if(selected_menu == 1)
         DisplayLiquidScreen();
       else
@@ -994,6 +1000,9 @@ void ReadQuickDoseScreen(){
           Accel_DC = true;
           which_dc = selected_liquid;
         }
+        DosingLiquid = selected_liquid;
+        isDosing = true;
+        DoseStartTime = millis();
       }
     }
     else if(key == 'A'){

@@ -7,6 +7,15 @@
 
 #define DEBUG true
 
+// Globals
+String current_screen = "Home";
+String last_screen = "Home";
+unsigned long last_activity = 0;
+int one_drop_time = 782; //time in milli sec
+
+unsigned long DoseStartTime = 0;
+uint8_t DosingLiquid = 0;
+bool isDosing = false;
 
 
 // DC Motors
@@ -16,16 +25,19 @@ uint8_t which_dc = 0;
 uint8_t dc_speed = 0;
 unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
+const uint8_t drops_time_loc = 2;
 uint8_t DOSE_INTERVALS[] = {30, 23, 0, 60};
 
+
+// Steppers
+const uint8_t SteppersEN[2] = {31, 33};
+const uint8_t SteppersDIR[2] = {30, 32};
+const uint8_t SteppersSTEP[2] = {14, 15};
 
 // Screen Function Defination
 void DisplayMenuScreen();
 
-// Globals
-String current_screen = "Home";
-String last_screen = "Home";
-unsigned long last_activity = 0;
+
 
 // Liquids
 float Total_Liquid[7] = {100, 20, 50, 70, 90, 100, 50};
@@ -191,6 +203,16 @@ void InitializePins(){
   pinMode(LEDdata, OUTPUT);  
   pinMode(LEDclock, OUTPUT);
   pinMode(LEDoe, OUTPUT);
+
+
+  pinMode(SteppersEN[0], OUTPUT);
+  pinMode(SteppersDIR[0], OUTPUT);
+  pinMode(SteppersSTEP[0], OUTPUT);
+  pinMode(SteppersEN[1], OUTPUT);
+  pinMode(SteppersDIR[1], OUTPUT);
+  pinMode(SteppersSTEP[1], OUTPUT);
+
+  
   #ifdef DEBUG
     Serial.println("[Main] Pins initialization complete");
   #endif
@@ -339,9 +361,21 @@ void loop(){
   else if(current_screen == "Quick"){
     ReadQuickDoseScreen();
     if(Accel_DC){
-      if(millis() - last_accel >= ACCEL_AFTER)
-      AccelerateDCMotor();
-      last_accel = millis();
+      if(millis() - last_accel >= ACCEL_AFTER){
+        AccelerateDCMotor();
+        last_accel = millis();
+      }
+    }
+    if(isDosing){
+      if(selected_liquid < 3){
+        if(millis() - DoseStartTime >= DOSE_INTERVALS[0] * 1000){
+          analogWrite(EN_Pins[which_dc], 0);
+          digitalWrite(MOSFET_PINS[selected_liquid]);
+          getLiquidLeds();
+        }
+      }
+      else{
+      }
     }
   }
   else if(current_screen == "DosingQnty"){
@@ -377,8 +411,9 @@ void loop(){
 }
 
 void AccelerateDCMotor(){
-  if(dc_speed < 255)
+  if(dc_speed < 155)
     dc_speed += 5;
   else
     Accel_DC = false;
+  analogWrite(EN_Pins[which_dc], dc_speed);
 }
