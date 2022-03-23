@@ -77,12 +77,12 @@ void ChaseLeds(){
     else{
       if(bit_set_x < 8){
         bitSet(chase_h, bit_set_x);
-        chase_l = 0;
         bit_set_x += 1;
       }
       else{
         bit_set = 0;
         bit_set_x = 0;
+        chase_l = 0;
       }
     }
     SetLeds(chase_l, chase_h);

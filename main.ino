@@ -14,25 +14,39 @@ unsigned long last_activity = 0;
 int one_drop_time = 782; //time in milli sec
 
 unsigned long DoseStartTime = 0;
+unsigned long DosePhase2 = 0;
+unsigned long DosePhase3 = 0;
+unsigned long DosePhase4 = 0;
+unsigned long DosePhase5 = 0;
 uint8_t DosingLiquid = 0;
 bool isDosing = false;
+uint8_t selected_liquid = 0;
+int qdq = 0;
 
 
 // DC Motors
-const uint8_t EN_Pins[4] = {2,3,4,5};
+const uint8_t DC_EN_Pins[4] = {2,3,4,5};
 bool Accel_DC = false;
 uint8_t which_dc = 0;
 uint8_t dc_speed = 0;
 unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
 const uint8_t drops_time_loc = 2;
-uint8_t DOSE_INTERVALS[] = {30, 23, 0, 60};
+const uint16_t step_200_duration = 1200;
+uint16_t DC_MOTOR_DURATION = 30;//000;
+uint16_t PRIME_TIME = 27600;
+uint32_t CLEAR_TIME = 72000;
+uint32_t DosingTime = 0;
+String DosingPhase = "0";
+
 
 
 // Steppers
 const uint8_t SteppersEN[2] = {31, 33};
 const uint8_t SteppersDIR[2] = {30, 32};
-const uint8_t SteppersSTEP[2] = {14, 15};
+const uint8_t SteppersSTEP[2] = {44, 45};
+bool SteppersStepsStatus = false;
+unsigned long lastStep = 0;
 
 // Screen Function Defination
 void DisplayMenuScreen();
@@ -189,6 +203,11 @@ const int Dose_Sched_Addr[7][3] = {
   ["", "", ""],
   ["", "", ""]
 */
+
+
+
+void ActivateStepper(uint8_t ID, uint8_t DIR);
+void DeactivateStepper(uint8_t ID);
 
 
 
@@ -360,21 +379,53 @@ void loop(){
   }
   else if(current_screen == "Quick"){
     ReadQuickDoseScreen();
-    if(Accel_DC){
-      if(millis() - last_accel >= ACCEL_AFTER){
-        AccelerateDCMotor();
-        last_accel = millis();
-      }
-    }
     if(isDosing){
-      if(selected_liquid < 3){
-        if(millis() - DoseStartTime >= DOSE_INTERVALS[0] * 1000){
-          analogWrite(EN_Pins[which_dc], 0);
-          digitalWrite(MOSFET_PINS[selected_liquid]);
-          getLiquidLeds();
+      if(DosingPhase == "1"){
+        if(Accel_DC){
+          if(millis() - last_accel >= ACCEL_AFTER){
+            AccelerateDCMotor();
+            last_accel = millis();
+            Serial.println("DC accel");
+          }
+        }
+        else if(millis() - DoseStartTime >= DC_MOTOR_DURATION){
+          digitalWrite(DC_EN_Pins[which_dc], 0);
+          StartPhase2();
         }
       }
-      else{
+      else if(DosingPhase == "2"){
+        if(millis() - DosePhase2 >= PRIME_TIME + DosingTime){
+          ActivateStepper(1, 0);
+          DosingPhase = "3";
+          DosePhase3 = millis();
+          Serial.println("Phase 3 started");
+        }
+      }
+      else if(DosingPhase == "3"){
+        if(millis() - DosePhase3 >= CLEAR_TIME){
+          DeactivateStepper(1);
+          digitalWrite(MOSFET_PINS[selected_liquid], LOW);
+          DosingPhase = "4";
+          ClearLeds();
+          LEDs_Status = "Chase";
+          ActivateStepper(0, 1);
+          DosePhase4 = millis();
+          digitalWrite(MOSFET_PINS[7], HIGH);
+          Serial.println("Phase 4 started");
+        }
+      }
+      else if(DosingPhase == "4"){
+        if(millis() - DosePhase4 >= 36000){
+          ActivateStepper(0, 0);
+          DosingPhase = "5";
+          DosePhase5 = millis();
+          Serial.println("Phase 5 started");
+        }
+      }
+      else if(DosingPhase == "5"){
+        if(millis() - DosePhase5 >= 60000){
+          EndDose(true);
+        }
       }
     }
   }
@@ -415,5 +466,30 @@ void AccelerateDCMotor(){
     dc_speed += 5;
   else
     Accel_DC = false;
-  analogWrite(EN_Pins[which_dc], dc_speed);
+  analogWrite(DC_EN_Pins[which_dc], dc_speed);
+}
+
+void StartPhase2(){
+  digitalWrite(MOSFET_PINS[selected_liquid], HIGH);
+  getLiquidLeds(selected_liquid);
+  LEDs_Status = "Blink";
+  DosingPhase = "2";
+  DosingTime = qdq * 1104;
+  ActivateStepper(1, 1);
+  DosePhase2 = millis();
+}
+
+void EndDose(bool Normal){
+  DeactivateStepper(0);
+  digitalWrite(MOSFET_PINS[7], LOW);
+  float usedDrops = 0;
+  if(!Normal){
+    DosingTime = millis() - DoseStartTime;
+  }
+  usedDrops = (DosingTime/1104) * 0.04;
+  Remaining_Liquid[selected_liquid] -= usedDrops;
+  writeFloatIntoEEPROM(Remain_Liquid_Addr[selected_liquid], Remaining_Liquid[selected_liquid]);
+  current_screen = "Home";
+  isDosing = false; 
+  DisplayHomeScreen();
 }

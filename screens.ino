@@ -1,5 +1,4 @@
 uint8_t selected_menu = 0;
-uint8_t selected_liquid = 0;
 uint8_t scroll_pos = 0;
 uint8_t selected_liquid_menu = 0;
 uint8_t last_selected_liquid = 0;
@@ -24,18 +23,29 @@ void UpdateRTC(){
   ClearLCD(0,9,1,19);
   myRTC.updateTime();
   lcd.setCursor(9,0);
-  lcd.print(String(myRTC.hours) + ":" + String(myRTC.minutes) + ":" + String(myRTC.seconds));
+
+  lcd.print(myRTC.hours);
+  lcd.print(":");
+  lcd.print(myRTC.minutes);
+  lcd.print(":");
+  lcd.print(myRTC.seconds);
   lcd.setCursor(9,1);
-  lcd.print(String(myRTC.dayofmonth) + ":" + String(myRTC.month) + ":" + String(myRTC.year));
+  lcd.print(myRTC.dayofmonth);
+  lcd.print(":");
+  lcd.print(myRTC.month);
+  lcd.print(":");
+  lcd.print(myRTC.year);
 }
 
 void UpdateDHT(){
   if(read_dht()){
     ClearLCD(2,9,3,18);
     lcd.setCursor(9,2);
-    lcd.print(String(temperature) + " C");
+    lcd.print(temperature);
+    lcd.print(" C");
     lcd.setCursor(9,3);
-    lcd.print(String(humidity) + " rH%");
+    lcd.print(humidity);
+    lcd.print(" rH%");
   }
 }
 
@@ -68,7 +78,6 @@ void UpdateCapacityBars(){
           lcd.setCursor(i,0);
           lcd.write(byte(x-21));
         }
-        break;
       }
     }
   }
@@ -983,7 +992,6 @@ void DisplayQuickDoseScreen(){
 
 
 String QDQ = "";
-int qdq = 0;
 
 void ReadQuickDoseScreen(){
   char key = GetKey();
@@ -996,10 +1004,18 @@ void ReadQuickDoseScreen(){
         EditDosingQuantity();
       }
       else{
-        if(selected_liquid < 3){
+        DosingPhase = "2";
+        if(selected_liquid < 3 || selected_liquid == 6){
           Accel_DC = true;
+          ClearLeds();
+          DosingPhase = "1";
+          LEDs_Status = "Chase";
           which_dc = selected_liquid;
+          if(selected_liquid == 6)
+            which_dc = 3;
         }
+        if(DosingPhase == "2")
+          StartPhase2();
         DosingLiquid = selected_liquid;
         isDosing = true;
         DoseStartTime = millis();
@@ -1059,6 +1075,9 @@ void ReadDosingQuantity(){
     }
     else if(key == '1' || key == '2' || key == '3' || key == '4' || key == '5' || key == '6' || key == '7' || key == '8' || key == '9' || key == '0'){
       QDQ.setCharAt(drop_crs-7, key);
+      drop_crs += 1;
+      if(drop_crs > 9)
+        drop_crs = 7;
       EditDosingQuantity();
     }
     else if(key == '*'){
@@ -1074,8 +1093,10 @@ uint8_t flush_menu_select = 0;
 
 void DisplayFluchScreen(){
   last_screen = current_screen = "Flush";
-   lcd.clear();
-  lcd.setCursor(0,flush_menu_select);
+  lcd.clear();
+  lcd.setCursor(8,0);
+  lcd.print("Flush");
+  lcd.setCursor(0,flush_menu_select+1);
   lcd.print('>');
   lcd.setCursor(1,0);
   lcd.print("Small Line");
@@ -1090,6 +1111,18 @@ void ReadFluchScreen(){
     if(key == '#'){
       ClearLeds();
       LEDs_Status = "Chase";
+    }
+    else if(key == 'A'){
+      flush_menu_select -= 1;
+      if(flush_menu_select > 250)
+        flush_menu_select = 1;
+      DisplayFluchScreen();
+    }
+    else if(key == 'B'){
+      flush_menu_select += 1;
+      if(flush_menu_select > 1)
+        flush_menu_select = 0;
+      DisplayFluchScreen();
     }
     else if(key == '*'){
       LEDs_Status = "";

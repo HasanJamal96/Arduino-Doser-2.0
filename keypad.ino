@@ -8,8 +8,8 @@ const char hexaKeys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 
-const byte rowPins[ROWS] = {40, 41, 42, 43}; 
-const byte colPins[COLS] = {44, 45, 46, 47};
+const byte rowPins[ROWS] = {46, 47, 48, 49}; 
+const byte colPins[COLS] = {50, 51, 52, 53};
 
 Keypad KP = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 

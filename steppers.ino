@@ -1,6 +1,6 @@
 
 
-int8_t activeStepper = -1
+int8_t activeStepper = -1;
 
 void ActivateStepper(uint8_t ID, uint8_t DIR){
   digitalWrite(SteppersEN[ID], HIGH);
@@ -10,10 +10,13 @@ void ActivateStepper(uint8_t ID, uint8_t DIR){
   }
   else
     digitalWrite(SteppersDIR[ID], LOW);
+
+  analogWrite(SteppersSTEP[ID], 125);
 }
 
 
 void DeactivateStepper(uint8_t ID){
   digitalWrite(SteppersEN[ID], LOW);
-  activeStepper = -1
+  activeStepper = -1;
+  analogWrite(SteppersSTEP[ID], 0);
 }
