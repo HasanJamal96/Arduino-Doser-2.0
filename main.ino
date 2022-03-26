@@ -215,9 +215,11 @@ void InitializePins(){
   #ifdef DEBUG
     Serial.println("[Main] Initializing pins");
   #endif
-  for(uint8_t i=0; i<8; i++){
+  for(uint8_t i=0; i<8; i++)
     pinMode(MOSFET_PINS[i], OUTPUT);
-  }
+  for(uint8_t i=0; i<4; i++){
+    pinMode(DC_EN_Pins[i], OUTPUT);
+  
   pinMode(LEDlatch, OUTPUT);
   pinMode(LEDdata, OUTPUT);  
   pinMode(LEDclock, OUTPUT);
@@ -225,9 +227,11 @@ void InitializePins(){
 
 
   pinMode(SteppersEN[0], OUTPUT);
+  digitalWrite(SteppersEN[0], HIGH);
   pinMode(SteppersDIR[0], OUTPUT);
   pinMode(SteppersSTEP[0], OUTPUT);
   pinMode(SteppersEN[1], OUTPUT);
+  digitalWrite(SteppersEN[1], HIGH);
   pinMode(SteppersDIR[1], OUTPUT);
   pinMode(SteppersSTEP[1], OUTPUT);
 
@@ -317,7 +321,6 @@ void setup(){
   SetKeypadParams();
   ClearLeds();
 
-  myRTC.setDS1302Time(9, 22, 10, 4, 2, 3, 2022);
   #ifdef DEBUG
     Serial.println("[RTC] setting time ");
     Serial.println("[Main] Setup complete");
@@ -456,6 +459,12 @@ void loop(){
   else if(LEDs_Status == "Chase"){
     if(millis() - last_chase > CHASE_DELAY){
       ChaseLeds();
+      last_chase = millis();
+    }
+  }
+  else if(LEDs_Status == "Chase2"){
+    if(millis() - last_chase > CHASE_DELAY){
+      Chase2();
       last_chase = millis();
     }
   }

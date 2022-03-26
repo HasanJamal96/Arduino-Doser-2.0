@@ -1009,7 +1009,7 @@ void ReadQuickDoseScreen(){
           Accel_DC = true;
           ClearLeds();
           DosingPhase = "1";
-          LEDs_Status = "Chase";
+          LEDs_Status = "Chase2";
           which_dc = selected_liquid;
           if(selected_liquid == 6)
             which_dc = 3;

@@ -68,26 +68,6 @@ byte chase_h = 0;
 
 void ChaseLeds(){
   digitalWrite(LEDoe, LOW);
-  if(isDosing){
-    if(bit_set < 8){
-      bitSet(chase_l, bit_set);
-      bit_set_x = chase_h = 0;
-      bit_set += 1;
-    }
-    else{
-      if(bit_set_x < 8){
-        bitSet(chase_h, bit_set_x);
-        bit_set_x += 1;
-      }
-      else{
-        bit_set = 0;
-        bit_set_x = 0;
-        chase_l = 0;
-      }
-    }
-    SetLeds(chase_l, chase_h);
-    return;
-  }
   chase_l = 0;
   chase_h = 0;
   if(bit_set < 8){
@@ -98,6 +78,28 @@ void ChaseLeds(){
   else{
     bit_set = chase_l = 0;
     chase_h = 0;
+  }
+  SetLeds(chase_l, chase_h);
+}
+
+
+void Chase2(){
+  digitalWrite(LEDoe, LOW);
+  if(bit_set < 8){
+    bitSet(chase_l, bit_set);
+    bit_set_x = chase_h = 0;
+    bit_set += 1;
+  }
+  else{
+    if(bit_set_x < 8){
+      bitSet(chase_h, bit_set_x);
+      bit_set_x += 1;
+    }
+    else{
+      bit_set = 0;
+      bit_set_x = 0;
+      chase_l = 0;
+    }
   }
   SetLeds(chase_l, chase_h);
 }
