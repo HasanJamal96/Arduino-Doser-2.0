@@ -33,7 +33,7 @@ unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
 const uint8_t drops_time_loc = 2;
 const uint16_t step_200_duration = 1200;
-uint16_t DC_MOTOR_DURATION = 30;//000;
+uint16_t DC_MOTOR_DURATION = 30000;
 uint16_t PRIME_TIME = 27600;
 uint32_t CLEAR_TIME = 72000;
 uint32_t DosingTime = 0;
@@ -56,13 +56,25 @@ void DisplayMenuScreen();
 // Liquids
 float Total_Liquid[7] = {100, 20, 50, 70, 90, 100, 50};
 float Remaining_Liquid[7] = {100, 20, 50, 70, 90, 100, 50};
-int Drops[7] = {1,2,3,4,5,10,50};
+int Drops[7][3] = {1, 2, 3,
+                   4, 5, 1,
+                   5, 6, 5,
+                   8, 9, 1,
+                   1, 2, 3,
+                   8, 6 ,4,
+                   1, 9 ,7};
 
 String LiquidNames[7] = {"Liquid 1","Liquid 2","Liquid 3","Liquid 4","Liquid 5","Liquid 6","Liquid 7"};
 const int LiquidNameAddr[7] = {266, 279, 292, 305, 318, 331, 344};
 const int Total_Liquid_Addr[7] = {210, 214, 218, 222, 226, 230, 234};
 const int Remain_Liquid_Addr[7] = {238, 242, 246, 250, 254, 258, 262};
-const int Drops_Addr[7] = {357, 359, 361, 363, 365, 367, 369};
+const int Drops_Addr[7][3] = {357, 359, 361, 
+                              363, 365, 367, 
+                              369, 371, 373,
+                              375, 377, 379,
+                              381, 383, 385,
+                              387, 389, 391,
+                              393, 395, 397};
 
 const uint16_t LIQUID_UPDATE_AFTER = 10000;
 unsigned long liquid_last_update = 0;
@@ -217,7 +229,7 @@ void InitializePins(){
   #endif
   for(uint8_t i=0; i<8; i++)
     pinMode(MOSFET_PINS[i], OUTPUT);
-  for(uint8_t i=0; i<4; i++){
+  for(uint8_t i=0; i<4; i++)
     pinMode(DC_EN_Pins[i], OUTPUT);
   
   pinMode(LEDlatch, OUTPUT);
@@ -297,7 +309,6 @@ void ReadLiquidVolumes(){
   for(uint8_t x=0; x<7; x++){
     Total_Liquid[x] = readFloatFromEEPROM(Total_Liquid_Addr[x]);
     Remaining_Liquid[x] = readFloatFromEEPROM(Remain_Liquid_Addr[x]);
-    Drops[x] = readIntFromEEPROM(Drops_Addr[x]);
   }
 }
 
@@ -438,36 +449,7 @@ void loop(){
   else if(current_screen == "Flush"){
     ReadFluchScreen();
   }
-  
-  
-  if(LEDs_Status == "Blink"){
-    if(millis() - LastBlink >= BLINK_INTERVAL){
-      BlinkLeds(Blink_state);
-      LastBlink = millis();
-      if(Blink_state)
-        Blink_state = false;
-      else
-        Blink_state = true;
-    }
-  }
-  else if(LEDs_Status == "Fade"){
-    if(millis() - last_fade >= 50){
-      FadeLeds();
-      last_fade = millis();
-    }
-  }
-  else if(LEDs_Status == "Chase"){
-    if(millis() - last_chase > CHASE_DELAY){
-      ChaseLeds();
-      last_chase = millis();
-    }
-  }
-  else if(LEDs_Status == "Chase2"){
-    if(millis() - last_chase > CHASE_DELAY){
-      Chase2();
-      last_chase = millis();
-    }
-  }
+  LedsLoopCode();
 }
 
 void AccelerateDCMotor(){

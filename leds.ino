@@ -103,3 +103,35 @@ void Chase2(){
   }
   SetLeds(chase_l, chase_h);
 }
+
+
+void LedsLoopCode(){
+  if(LEDs_Status == "Blink"){
+    if(millis() - LastBlink >= BLINK_INTERVAL){
+      BlinkLeds(Blink_state);
+      LastBlink = millis();
+      if(Blink_state)
+        Blink_state = false;
+      else
+        Blink_state = true;
+    }
+  }
+  else if(LEDs_Status == "Fade"){
+    if(millis() - last_fade >= 50){
+      FadeLeds();
+      last_fade = millis();
+    }
+  }
+  else if(LEDs_Status == "Chase"){
+    if(millis() - last_chase > CHASE_DELAY){
+      ChaseLeds();
+      last_chase = millis();
+    }
+  }
+  else if(LEDs_Status == "Chase2"){
+    if(millis() - last_chase > CHASE_DELAY){
+      Chase2();
+      last_chase = millis();
+    }
+  }
+}

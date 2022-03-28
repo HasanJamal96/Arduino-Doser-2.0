@@ -780,7 +780,7 @@ void ReadEditDose(){
       NS = Dose_Shedules[last_selected_liquid][selected_schedule];
       if(selected_schedule_menu != 0){
         lcd.cursor();
-        shed_drops = String(Drops[last_selected_liquid]);
+        shed_drops = String(Drops[last_selected_liquid][selected_schedule]);
         if(shed_drops.length() < 3)
           shed_drops += "  ";
       }
@@ -821,7 +821,8 @@ void DisplayEditSchedule(){
     lcd.setCursor(2,1);
     lcd.print("Current Schedule");
     lcd.setCursor(0,2);
-    lcd.print("Drops: " + String(Drops[last_selected_liquid]));
+    lcd.print("Drops: ");
+    lcd.print(Drops[last_selected_liquid][selected_schedule]);
     lcd.setCursor(0,3);
     String sched = Dose_Shedules[last_selected_liquid][selected_schedule];
     lcd.print("H:" + sched.substring(0,2) + " M:" + sched.substring(3,5) + " S:" + sched.substring(6,8) + " DOW:" + sched.substring(9,10));
@@ -844,9 +845,9 @@ void DisplayEditSchedule(){
     selected_schedule_menu = 0;
     lcd.noCursor();
     Dose_Shedules[last_selected_liquid][selected_schedule] = "00,00,00:0";
-    Drops[last_selected_liquid] = 0;
+    Drops[last_selected_liquid][selected_schedule] = 0;
     writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
-    writeIntIntoEEPROM(Drops_Addr[last_selected_liquid], 0);
+    writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
     delay(1500);
     DisplayEditDose();
   }
@@ -861,7 +862,7 @@ void ReadDisplayEditSchedule(){
         lcd.noCursor();
         Dose_Shedules[last_selected_liquid][selected_schedule] = NS;
         writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], NS);
-        writeIntIntoEEPROM(Drops_Addr[last_selected_liquid], shed_drops.toInt());
+        writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], shed_drops.toInt());
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
         lcd.print("Saved");
@@ -969,12 +970,13 @@ void ReadDisplayEditSchedule(){
 
 uint8_t quik_menu_select = 0;
 bool dosing_quick = false;
+String QDQ = "";
 
 
 void DisplayQuickDoseScreen(){
   last_screen = current_screen = "Quick";
   lcd.clear();
-  lcd.setCursor(0,quik_menu_select+1);
+  lcd.setCursor(0,quik_menu_select+2);
   lcd.print('>');
   lcd.setCursor(10-(LiquidNames[selected_liquid].length()/2),0);
   lcd.print(LiquidNames[selected_liquid]);
@@ -984,14 +986,17 @@ void DisplayQuickDoseScreen(){
   }
   else{
     lcd.setCursor(1,1);
-    lcd.print("Set Dosing quantity");
+    lcd.print("Drops set: ");
+    lcd.print(QDQ.toInt());
     lcd.setCursor(1,2);
+    lcd.print("Set Dosing quantity");
+    lcd.setCursor(1,3);
     lcd.print("Start Quick Dose");
+    
   }
 }
 
 
-String QDQ = "";
 
 void ReadQuickDoseScreen(){
   char key = GetKey();

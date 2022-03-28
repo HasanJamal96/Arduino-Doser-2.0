@@ -10,7 +10,6 @@ void ActivateStepper(uint8_t ID, uint8_t DIR){
   }
   else
     digitalWrite(SteppersDIR[ID], LOW);
-
   analogWrite(SteppersSTEP[ID], 125);
 }
 
