@@ -669,7 +669,10 @@ void ReadEditVolume(){
         }
       }
       else{
-        if(nv.toFloat() > 0 && (nv.toFloat() <= Total_Liquid[last_selected_liquid])){
+        float maxi_vol = 100.0;
+        if(last_selected_liquid > 5)
+          maxi_vol = 300.00;
+        if(nv.toFloat() > 0 && (nv.toFloat() <= maxi_vol)){
           new_vol = nv;
           cur_pos += 1;
           EditVolume();
@@ -978,8 +981,9 @@ void DisplayQuickDoseScreen(){
   lcd.clear();
   lcd.setCursor(0,quik_menu_select+2);
   lcd.print('>');
-  lcd.setCursor(10-(LiquidNames[selected_liquid].length()/2),0);
-  lcd.print(LiquidNames[selected_liquid]);
+  Serial.println(last_selected_liquid);
+  lcd.setCursor(10-(LiquidNames[last_selected_liquid].length()/2),0);
+  lcd.print(LiquidNames[last_selected_liquid]);
   if(dosing_quick){
     lcd.setCursor(0,2);
     lcd.print("QuickDose in process");
@@ -1010,18 +1014,18 @@ void ReadQuickDoseScreen(){
       }
       else{
         DosingPhase = "2";
-        if(selected_liquid < 3 || selected_liquid == 6){
+        if(last_selected_liquid < 3 || last_selected_liquid == 6){
           Accel_DC = true;
           ClearLeds();
           DosingPhase = "1";
           LEDs_Status = "Chase2";
-          which_dc = selected_liquid;
+          which_dc = last_selected_liquid;
           if(selected_liquid == 6)
             which_dc = 3;
         }
         if(DosingPhase == "2")
           StartPhase2();
-        DosingLiquid = selected_liquid;
+        DosingLiquid = last_selected_liquid;
         isDosing = true;
         DoseStartTime = millis();
       }

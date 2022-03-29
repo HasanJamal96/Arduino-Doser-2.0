@@ -399,11 +399,11 @@ void loop(){
           if(millis() - last_accel >= ACCEL_AFTER){
             AccelerateDCMotor();
             last_accel = millis();
-            Serial.println("DC accel");
           }
         }
         else if(millis() - DoseStartTime >= DC_MOTOR_DURATION){
           digitalWrite(DC_EN_Pins[which_dc], 0);
+          Serial.println("DC Stopped");
           StartPhase2();
         }
       }
@@ -412,13 +412,16 @@ void loop(){
           ActivateStepper(1, 0);
           DosingPhase = "3";
           DosePhase3 = millis();
+          Serial.print("Phase 2 completed after ");
+          Serial.print(millis()-DosePhase2);
+          Serial.println(" ms");
           Serial.println("Phase 3 started");
         }
       }
       else if(DosingPhase == "3"){
         if(millis() - DosePhase3 >= CLEAR_TIME){
           DeactivateStepper(1);
-          digitalWrite(MOSFET_PINS[selected_liquid], LOW);
+          digitalWrite(MOSFET_PINS[DosingLiquid], LOW);
           DosingPhase = "4";
           ClearLeds();
           LEDs_Status = "Chase";
@@ -458,16 +461,19 @@ void AccelerateDCMotor(){
   else
     Accel_DC = false;
   analogWrite(DC_EN_Pins[which_dc], dc_speed);
+  Serial.print("Accelerating DC: ");
+  Serial.println(which_dc + 1);
 }
 
 void StartPhase2(){
-  digitalWrite(MOSFET_PINS[selected_liquid], HIGH);
-  getLiquidLeds(selected_liquid);
+  digitalWrite(MOSFET_PINS[DosingLiquid], HIGH);
+  getLiquidLeds(DosingLiquid);
   LEDs_Status = "Blink";
   DosingPhase = "2";
   DosingTime = qdq * 1104;
   ActivateStepper(1, 1);
   DosePhase2 = millis();
+  Serial.println("Phase 2 started");
 }
 
 void EndDose(bool Normal){
@@ -478,8 +484,8 @@ void EndDose(bool Normal){
     DosingTime = millis() - DoseStartTime;
   }
   usedDrops = (DosingTime/1104) * 0.04;
-  Remaining_Liquid[selected_liquid] -= usedDrops;
-  writeFloatIntoEEPROM(Remain_Liquid_Addr[selected_liquid], Remaining_Liquid[selected_liquid]);
+  Remaining_Liquid[DosingLiquid] -= usedDrops;
+  writeFloatIntoEEPROM(Remain_Liquid_Addr[DosingLiquid], Remaining_Liquid[DosingLiquid]);
   current_screen = "Home";
   isDosing = false; 
   DisplayHomeScreen();
