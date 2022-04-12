@@ -53,10 +53,10 @@ void UpdateCapacityBars(){
   ClearLCD(0,0,3,6);
   for(uint8_t i=0; i<7; i++){
     lcd.setCursor(i,3);
-    for(uint8_t x=0; x<28; x++){
+    for(uint8_t x=0; x<30; x++){
       if(Remaining_Liquid[i] > x*10 && Remaining_Liquid[i] <= (x*10)+10){
         if(x<7)
-          lcd.write(byte(i));
+          lcd.write(byte(x));
         else if(x<14){
           lcd.write(byte(6));
           lcd.setCursor(i,2);
@@ -69,7 +69,7 @@ void UpdateCapacityBars(){
           lcd.setCursor(i,1);
           lcd.write(byte(x-14));
         }
-        else if(x<28){
+        else if(x<30){
           lcd.write(byte(6));
           lcd.setCursor(i,2);
           lcd.write(byte(6));
@@ -77,6 +77,8 @@ void UpdateCapacityBars(){
           lcd.write(byte(6));
           lcd.setCursor(i,0);
           lcd.write(byte(x-21));
+          if(x > 27)
+            lcd.write(byte(6));
         }
       }
     }
@@ -857,6 +859,47 @@ void DisplayEditSchedule(){
 }
 
 
+void UpdateScheduleCursor(char which_way){
+  if(which_way == 'C'){
+    if(x_shed_pos == 3){
+      if(sche_cur_pos == 2 || sche_cur_pos == 7 || sche_cur_pos == 12)
+        sche_cur_pos += 1;
+      else if(sche_cur_pos == 3 || sche_cur_pos == 8)
+        sche_cur_pos += 4;
+      else if(sche_cur_pos == 13)
+        sche_cur_pos += 6;
+      else if(sche_cur_pos == 19)
+        sche_cur_pos = 2;
+      lcd.setCursor(sche_cur_pos,3);
+    }
+    else{
+      drop_crs += 1;
+      if(drop_crs > 9)
+        drop_crs = 7;
+      lcd.setCursor(drop_crs,2);
+    }
+  }
+  else if(which_way == 'D'){
+    if(x_shed_pos == 3){
+      if(sche_cur_pos == 7 || sche_cur_pos == 12)
+        sche_cur_pos -= 4;
+      else if(sche_cur_pos == 3 || sche_cur_pos == 8 || sche_cur_pos == 13)
+        sche_cur_pos -= 1;
+      else if(sche_cur_pos == 19)
+        sche_cur_pos -= 6;
+      else if(sche_cur_pos == 2)
+        sche_cur_pos = 19;
+      lcd.setCursor(sche_cur_pos,3);
+    }
+    else{
+      drop_crs -= 1;
+      if(drop_crs < 7)
+        drop_crs = 9;
+      lcd.setCursor(drop_crs,2);
+    }
+  }
+}
+
 void ReadDisplayEditSchedule(){
   char key = GetKey();
   if(key != '-'){
@@ -886,42 +929,10 @@ void ReadDisplayEditSchedule(){
         DisplayEditSchedule();
       }
       else if(key == 'C'){
-        if(x_shed_pos == 3){
-          if(sche_cur_pos == 2 || sche_cur_pos == 7 || sche_cur_pos == 12)
-            sche_cur_pos += 1;
-          else if(sche_cur_pos == 3 || sche_cur_pos == 8)
-            sche_cur_pos += 4;
-          else if(sche_cur_pos == 13)
-            sche_cur_pos += 6;
-          else if(sche_cur_pos == 19)
-            sche_cur_pos = 2;
-          lcd.setCursor(sche_cur_pos,3);
-        }
-        else{
-          drop_crs += 1;
-          if(drop_crs > 9)
-            drop_crs = 7;
-          lcd.setCursor(drop_crs,2);
-        }
+        UpdateScheduleCursor('C');
       }
       else if(key == 'D'){
-        if(x_shed_pos == 3){
-          if(sche_cur_pos == 7 || sche_cur_pos == 12)
-            sche_cur_pos -= 4;
-          else if(sche_cur_pos == 3 || sche_cur_pos == 8 || sche_cur_pos == 13)
-            sche_cur_pos -= 1;
-          else if(sche_cur_pos == 19)
-            sche_cur_pos -= 6;
-          else if(sche_cur_pos == 2)
-            sche_cur_pos = 19;
-          lcd.setCursor(sche_cur_pos,3);
-        }
-        else{
-          drop_crs -= 1;
-          if(drop_crs < 7)
-            drop_crs = 9;
-          lcd.setCursor(drop_crs,2);
-        }
+        UpdateScheduleCursor('D');
       }
       else if(key == '1' || key == '2' || key == '3' || key == '4' || key == '5' || key == '6' || key == '7' || key == '8' || key == '9' || key == '0'){
         if(x_shed_pos == 3){
@@ -959,6 +970,7 @@ void ReadDisplayEditSchedule(){
         }
         else{
           shed_drops.setCharAt(drop_crs-7, key);
+          UpdateScheduleCursor('C');
         }
         DisplayEditSchedule();
       }
@@ -981,7 +993,6 @@ void DisplayQuickDoseScreen(){
   lcd.clear();
   lcd.setCursor(0,quik_menu_select+2);
   lcd.print('>');
-  Serial.println(last_selected_liquid);
   lcd.setCursor(10-(LiquidNames[last_selected_liquid].length()/2),0);
   lcd.print(LiquidNames[last_selected_liquid]);
   if(dosing_quick){
@@ -1014,18 +1025,23 @@ void ReadQuickDoseScreen(){
       }
       else{
         DosingPhase = "2";
+        DosingLiquid = last_selected_liquid;
+        if(last_selected_liquid != 6)
+          activeStepper = 1;
+        else
+          activeStepper = 0;
         if(last_selected_liquid < 3 || last_selected_liquid == 6){
           Accel_DC = true;
           ClearLeds();
+          dc_speed = 0;
           DosingPhase = "1";
           LEDs_Status = "Chase2";
           which_dc = last_selected_liquid;
-          if(selected_liquid == 6)
+          if(last_selected_liquid == 6)
             which_dc = 3;
         }
         if(DosingPhase == "2")
           StartPhase2();
-        DosingLiquid = last_selected_liquid;
         isDosing = true;
         DoseStartTime = millis();
       }
@@ -1054,8 +1070,8 @@ void ReadQuickDoseScreen(){
 void EditDosingQuantity(){
   last_screen = current_screen = "DosingQnty";
   lcd.clear();
-  lcd.setCursor(10-(LiquidNames[selected_liquid].length()/2),0);
-  lcd.print(LiquidNames[selected_liquid]);
+  lcd.setCursor(10-(LiquidNames[last_selected_liquid].length()/2),0);
+  lcd.print(LiquidNames[last_selected_liquid]);
   lcd.setCursor(0,1);
   lcd.print("Drops: " + QDQ);
   lcd.setCursor(drop_crs,1);
@@ -1120,6 +1136,12 @@ void ReadFluchScreen(){
     if(key == '#'){
       ClearLeds();
       LEDs_Status = "Chase";
+      if(flush_menu_select == 0)
+        activeStepper = 1;
+      else
+        activeStepper = 0;
+      isFlush = true;
+      StartFlushingSequence();
     }
     else if(key == 'A'){
       flush_menu_select -= 1;
