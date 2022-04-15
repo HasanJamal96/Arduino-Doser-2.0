@@ -213,8 +213,6 @@ void ReadRTCScreen(){
       int year = mth.substring(2,4).toInt();
       int month = mth.toInt();
       int dow = ((year /4) + d.toInt() + mth_key[month-1] + 4 + year) % 4;
-      Serial.print("Setting time to: ");
-      Serial.println(h + ":" + m + ":" + s + "__" + d + "/" + String(month) + "/" + y);
       myRTC.setDS1302Time(s.toInt(), m.toInt(), h.toInt(), dow, d.toInt(), month, y.toInt());
       lcd.noCursor();
       DisplayMenuScreen();
@@ -849,11 +847,13 @@ void DisplayEditSchedule(){
     lcd.print("Deleted");
     selected_schedule_menu = 0;
     lcd.noCursor();
+    Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
+    AlarmIDs[last_selected_liquid][selected_schedule] = -1;
     Dose_Shedules[last_selected_liquid][selected_schedule] = "00,00,00:0";
     Drops[last_selected_liquid][selected_schedule] = 0;
     writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
     writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
-    delay(1500);
+    Alarm.delay(1500);
     DisplayEditDose();
   }
 }
@@ -909,11 +909,19 @@ void ReadDisplayEditSchedule(){
         Dose_Shedules[last_selected_liquid][selected_schedule] = NS;
         writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], NS);
         writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], shed_drops.toInt());
+        uint8_t s_hrs = Dose_Shedules[last_selected_liquid][selected_schedule].substring(0,2).toInt();
+        uint8_t s_min = Dose_Shedules[last_selected_liquid][selected_schedule].substring(3,5).toInt();
+        uint8_t s_sec = Dose_Shedules[last_selected_liquid][selected_schedule].substring(6,8).toInt();
+        uint8_t s_dow = Dose_Shedules[last_selected_liquid][selected_schedule].substring(9,10).toInt();
+        if(AlarmIDs[last_selected_liquid][selected_schedule] == -1)
+          Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
+        AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
+        
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
         lcd.print("Saved");
         selected_schedule_menu = 0;
-        delay(2000);
+        Alarm.delay(2000);
         DisplayEditDose();
       }
       else if(key == 'A'){
@@ -1031,17 +1039,14 @@ void ReadQuickDoseScreen(){
         else
           activeStepper = 0;
         if(last_selected_liquid < 3 || last_selected_liquid == 6){
-          Accel_DC = true;
-          ClearLeds();
-          dc_speed = 0;
-          DosingPhase = "1";
-          LEDs_Status = "Chase2";
-          which_dc = last_selected_liquid;
-          if(last_selected_liquid == 6)
-            which_dc = 3;
+          StartDose(last_selected_liquid, 0);
         }
-        if(DosingPhase == "2")
+        if(DosingPhase == "2"){
+          Max_Dosing_Duration -= DC_MOTOR_DURATION;
+          ProgressScreen();
           StartPhase2();
+        }
+        Remaining_Dosing_Duration = Max_Dosing_Duration;
         isDosing = true;
         DoseStartTime = millis();
       }
@@ -1141,6 +1146,8 @@ void ReadFluchScreen(){
       else
         activeStepper = 0;
       isFlush = true;
+      Remaining_Dosing_Duration = Max_Dosing_Duration = FLUSH_CW + FLUSH_CCW;
+      ProgressScreen();
       StartFlushingSequence();
     }
     else if(key == 'A'){
@@ -1160,6 +1167,38 @@ void ReadFluchScreen(){
       ClearLeds();
       scroll_pos = quik_menu_select = 0;
       DisplayMenuScreen();
+    }
+  }
+}
+
+void ProgressScreen(){
+  last_screen = current_screen = "Progress";
+  lcd.clear();
+  if(isDosing){
+    lcd.setCursor(1,0);
+    lcd.print("Dosing in progress");
+  }
+  else{
+    lcd.setCursor(2,0);
+    lcd.print("Flush in progress");
+  }
+  lcd.setCursor(0,2);
+  lcd.print("Press ESC to Cancel");
+}
+
+
+void updateProgressBar(){
+  ClearLCD(1,1,7,12);
+  lcd.setCursor(8,1);
+  lcd.print(map(Remaining_Dosing_Duration, 0, Max_Dosing_Duration, 0, 100));
+  lcd.print("%");
+}
+
+void ReadProgressScreen(){
+  char key = GetKey();
+  if(key != '-'){
+    if(key == '*'){
+      EndDose(false);
     }
   }
 }

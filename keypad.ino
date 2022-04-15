@@ -14,7 +14,7 @@ const byte colPins[COLS] = {50, 51, 52, 53};
 Keypad KP = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
 void SetKeypadParams(){
-  KP.setDebounceTime(100);
+  KP.setDebounceTime(50);
 }
 
 char GetKey(){

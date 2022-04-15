@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <Keypad.h>
 #include <EEPROM.h>
+#include <TimeLib.h>
+#include <TimeAlarms.h>
 #include <virtuabotixRTC.h>
 #include <LiquidCrystal_I2C.h>
 
@@ -11,7 +13,7 @@
 String current_screen = "Home";
 String last_screen = "Home";
 unsigned long last_activity = 0;
-int one_drop_time = 782; //time in milli sec
+//int one_drop_time = 782; //time in milli sec
 
 unsigned long DoseStartTime = 0;
 unsigned long DosePhase2 = 0;
@@ -22,6 +24,10 @@ uint8_t DosingLiquid = 0;
 bool isDosing = false;
 uint8_t selected_liquid = 0;
 int qdq = 0;
+uint8_t Running_Schedule = 0;
+uint8_t Running_Schedule_Liquid = 0;
+bool isScheduleRunning = false;
+bool StartSchedule = false;
 
 
 // DC Motors
@@ -32,10 +38,17 @@ uint8_t dc_speed = 0;
 unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
 const uint8_t drops_time_loc = 2;
-const uint16_t step_200_duration = 1200;
-uint16_t DC_MOTOR_DURATION = 30000;
-uint16_t PRIME_TIME = 27600;
-uint32_t CLEAR_TIME = 72000;
+//const uint16_t step_200_duration = 1200;
+const uint16_t DC_MOTOR_DURATION = 30000;
+const uint16_t PRIME_TIME = 27600;
+const uint16_t CLEAR_TIME = 72000;
+const uint16_t FLUSH_CW = 36000;
+const uint16_t FLUSH_CCW = 72000;
+uint16_t Max_Dosing_Duration = 0;
+uint16_t Remaining_Dosing_Duration = 0;
+
+unsigned long progess_last_update = 0;
+
 uint32_t DosingTime = 0;
 String DosingPhase = "0";
 
@@ -158,7 +171,9 @@ virtuabotixRTC myRTC(RTC_CLK, RTC_DATA, RTC_RESET);
 int mth_key[12] = {1,3,3,0,2,5,0,3,6,1,4,6};
 unsigned long last_rtc_update = 0;
 const uint16_t RTC_UPDATE_INTERVAL = 1000; // time im ms
-
+timeDayOfWeek_t weekDays[7] = {dowSunday, dowMonday, dowTuesday, dowWednesday, dowThursday, dowFriday, dowSaturday};
+AlarmID_t AlarmIDs[7][3];
+typedef void (*function) () ;
 
 // DHT
 #define DHT_PIN A15
@@ -220,6 +235,9 @@ const int Dose_Sched_Addr[7][3] = {
 
 void ActivateStepper(uint8_t ID, uint8_t DIR);
 void DeactivateStepper(uint8_t ID);
+
+
+
 
 
 
@@ -315,10 +333,6 @@ void ReadLiquidVolumes(){
 }
 
 
-void AttatchSchedules(){
-  // Work in progress :)
-  return;
-}
 
 void setup(){
   #ifdef DEBUG
@@ -329,6 +343,7 @@ void setup(){
   ReadSchedulesFromEEPROM();
   ReadNamesFromEEPROM();
   ReadLiquidVolumes();
+  AttatchSchedules();
   InitializeLCD();
   DisplayHomeScreen();
   SetKeypadParams();
@@ -341,6 +356,14 @@ void setup(){
 }
 
 void loop(){
+  if(StartSchedule){
+    StartDose(Running_Schedule_Liquid, 1);
+    isScheduleRunning = true;
+  }
+  else if(isScheduleRunning){
+    Dosing();
+  }
+  
   if(current_screen == "Home"){
     if(millis() - last_rtc_update >= RTC_UPDATE_INTERVAL){
       UpdateRTC();
@@ -395,16 +418,24 @@ void loop(){
   }
   else if(current_screen == "Quick"){
     ReadQuickDoseScreen();
-    Dosing();
+    
   }
   else if(current_screen == "DosingQnty"){
     ReadDosingQuantity();
   }
   else if(current_screen == "Flush"){
     ReadFluchScreen();
-    if(isFlush){
+  }
+  else if(current_screen == "Progress"){
+    if(isFlush)
       Flushing();
+    else if (isDosing)
+      Dosing();
+    if(millis() - progess_last_update > 1000){
+      updateProgressBar();
+      progess_last_update = millis();
     }
+    ReadProgressScreen();
   }
   LedsLoopCode();
 }
