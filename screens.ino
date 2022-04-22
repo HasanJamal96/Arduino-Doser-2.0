@@ -916,6 +916,14 @@ void ReadDisplayEditSchedule(){
         if(AlarmIDs[last_selected_liquid][selected_schedule] == -1)
           Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
         AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
+        Serial.print("Schedule set: ");
+        Serial.print(s_hrs);
+        Serial.print(":");
+        Serial.print(s_min);
+        Serial.print(":");
+        Serial.print(s_sec);
+        Serial.print(" Dow: ");
+        Serial.print(weeaysNames[s_dow]);
         
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
@@ -1034,21 +1042,17 @@ void ReadQuickDoseScreen(){
       else{
         DosingPhase = "2";
         DosingLiquid = last_selected_liquid;
+        activeStepper = 0;
         if(last_selected_liquid != 6)
           activeStepper = 1;
-        else
-          activeStepper = 0;
         if(last_selected_liquid < 3 || last_selected_liquid == 6){
           StartDose(last_selected_liquid, 0);
         }
-        if(DosingPhase == "2"){
+        else{
           Max_Dosing_Duration -= DC_MOTOR_DURATION;
-          ProgressScreen();
           StartPhase2();
         }
-        Remaining_Dosing_Duration = Max_Dosing_Duration;
-        isDosing = true;
-        DoseStartTime = millis();
+        ProgressScreen();
       }
     }
     else if(key == 'A'){
@@ -1186,12 +1190,12 @@ void ProgressScreen(){
   lcd.print("Press ESC to Cancel");
 }
 
-
 void updateProgressBar(){
-  ClearLCD(1,1,7,12);
+  /*ClearLCD(1,1,1,12);
   lcd.setCursor(8,1);
-  lcd.print(map(Remaining_Dosing_Duration, 0, Max_Dosing_Duration, 0, 100));
-  lcd.print("%");
+  uint32_t prog = millis() - DoseStartTime;
+  lcd.print(map(prog, 0, Max_Dosing_Duration, 0, 100));
+  lcd.print(" %");*/
 }
 
 void ReadProgressScreen(){

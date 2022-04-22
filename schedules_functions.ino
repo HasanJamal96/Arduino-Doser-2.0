@@ -1,4 +1,5 @@
 void StartDose(uint8_t L, uint8_t by){
+  Serial.println("Dosing sequence start");
   Accel_DC = true;
   ClearLeds();
   dc_speed = 0;
@@ -9,15 +10,18 @@ void StartDose(uint8_t L, uint8_t by){
   else if(L  == 6)
     which_dc = 3;
   if(by == 0){
-    DosingTime = qdq * 1104;
+    DosingTime = qdq * one_drop_time;
+    isDosing = true;
   }
   else{
-    DosingTime = Drops[Running_Schedule_Liquid][Running_Schedule] * 1104;
+    DosingTime = Drops[Running_Schedule_Liquid][Running_Schedule] * one_drop_time;
   }
   if(L < 3 || L == 6)
     Max_Dosing_Duration = DC_MOTOR_DURATION + PRIME_TIME + CLEAR_TIME + FLUSH_CW + FLUSH_CCW + DosingTime;
   else
     Max_Dosing_Duration = PRIME_TIME + CLEAR_TIME + FLUSH_CW + FLUSH_CCW + DosingTime;
+  Remaining_Dosing_Duration = Max_Dosing_Duration;
+  DoseStartTime = millis();
 }
 
 void Dosing(){
@@ -41,10 +45,7 @@ void Dosing(){
         ActivateStepper(activeStepper, 0);
         DosingPhase = "3";
         DosePhase3 = millis();
-        Serial.print("Phase 2 completed after ");
-        Serial.print(millis()-DosePhase2);
-        Serial.println(" ms");
-        Serial.println("Phase 3 started clear");
+        Serial.println("Clear");
       }
     }
     else  if(DosingPhase == "3"){
@@ -88,7 +89,7 @@ void StartFlushingSequence(){
   ActivateStepper(activeStepper, 1);
   DosePhase4 = millis();
   digitalWrite(MOSFET_PINS[7], HIGH);
-  Serial.println("Flushing started");
+  Serial.println("Flushing CW");
 }
 
 
@@ -98,7 +99,7 @@ void Flushing(){
       ActivateStepper(activeStepper, 0);
       DosingPhase = "5";
       DosePhase5 = millis();
-      Serial.println("Phase 5 started");
+      Serial.println("Flushing CCW");
     }
   }
   else if(DosingPhase == "5"){
@@ -109,6 +110,7 @@ void Flushing(){
 }
 
 void EndDose(bool Normal){
+  Serial.println("End Dosing");
   DeactivateStepper(activeStepper);
   digitalWrite(MOSFET_PINS[7], LOW);
   float usedDrops = 0;
@@ -120,12 +122,12 @@ void EndDose(bool Normal){
       if(DosingLiquid < 3 || DosingLiquid == 6){
         DosingTime = millis() - DoseStartTime - DC_MOTOR_DURATION - PRIME_TIME;
         if(DosingTime > 0){
-          usedDrops = (DosingTime/1104) * 0.04;
+          usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
         }
       }
     }
     else
-      usedDrops = (DosingTime/1104) * 0.04;
+      usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
     Remaining_Liquid[DosingLiquid] -= usedDrops;
     writeFloatIntoEEPROM(Remain_Liquid_Addr[DosingLiquid], Remaining_Liquid[DosingLiquid]);
   }
@@ -139,6 +141,8 @@ void L1_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 1");
   }
 }
 void L1_S2(){
@@ -146,6 +150,8 @@ void L1_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 1");
     
   }
 }
@@ -154,7 +160,8 @@ void L1_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 3 of Liquid 1");
   }
 }
 
@@ -164,7 +171,8 @@ void L2_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 2");
   }
 }
 void L2_S2(){
@@ -172,7 +180,8 @@ void L2_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 2");
   }
 }
 void L2_S3(){
@@ -180,7 +189,8 @@ void L2_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 1;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 3 of Liquid 2");
   }
 }
 
@@ -190,7 +200,8 @@ void L3_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 2;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 3");
   }
 }
 void L3_S2(){
@@ -198,7 +209,8 @@ void L3_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 2;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 3");
   }
 }
 void L3_S3(){
@@ -206,7 +218,8 @@ void L3_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 2;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 3");
   }
 }
 
@@ -216,7 +229,8 @@ void L4_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 3;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 4");
   }
 }
 void L4_S2(){
@@ -224,7 +238,8 @@ void L4_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 3;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 4");
   }
 }
 void L4_S3(){
@@ -232,7 +247,8 @@ void L4_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 3;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 3 of Liquid 4");
   }
 }
 
@@ -242,7 +258,8 @@ void L5_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 4;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 5");
   }
 }
 void L5_S2(){
@@ -250,7 +267,8 @@ void L5_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 4;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 5");
   }
 }
 void L5_S3(){
@@ -258,7 +276,8 @@ void L5_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 4;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 3 of Liquid 5");
   }
 }
 
@@ -268,7 +287,8 @@ void L6_S1(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 5;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 1 of Liquid 6");
   }
 }
 void L6_S2(){
@@ -276,7 +296,8 @@ void L6_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 5;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 2 of Liquid 6");
   }
 }
 void L6_S3(){
@@ -284,7 +305,8 @@ void L6_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 5;
     StartSchedule = true;
-    
+    activeStepper = 1;
+    Serial.println("Starting Schedule 3 of Liquid 6");
   }
 }
 
@@ -294,7 +316,8 @@ void L7_S1(){
     Running_Schedule = 0;
     Running_Schedule_Liquid = 6;
     StartSchedule = true;
-    
+    activeStepper = 0;
+    Serial.println("Starting Schedule 1 of Liquid 7");
   }
 }
 void L7_S2(){
@@ -302,7 +325,8 @@ void L7_S2(){
     Running_Schedule = 1;
     Running_Schedule_Liquid = 6;
     StartSchedule = true;
-    
+    activeStepper = 0;
+    Serial.println("Starting Schedule 2 of Liquid 7");
   }
 }
 void L7_S3(){
@@ -310,7 +334,8 @@ void L7_S3(){
     Running_Schedule = 2;
     Running_Schedule_Liquid = 6;
     StartSchedule = true;
-    
+    activeStepper = 0;
+    Serial.println("Starting Schedule 3 of Liquid 7");
   }
 }
 

@@ -13,7 +13,6 @@
 String current_screen = "Home";
 String last_screen = "Home";
 unsigned long last_activity = 0;
-//int one_drop_time = 782; //time in milli sec
 
 unsigned long DoseStartTime = 0;
 unsigned long DosePhase2 = 0;
@@ -37,15 +36,28 @@ uint8_t which_dc = 0;
 uint8_t dc_speed = 0;
 unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
-const uint8_t drops_time_loc = 2;
-//const uint16_t step_200_duration = 1200;
-const uint16_t DC_MOTOR_DURATION = 30000;
-const uint16_t PRIME_TIME = 27600;
-const uint16_t CLEAR_TIME = 72000;
-const uint16_t FLUSH_CW = 36000;
-const uint16_t FLUSH_CCW = 72000;
-uint16_t Max_Dosing_Duration = 0;
-uint16_t Remaining_Dosing_Duration = 0;
+
+
+/* 
+ *  Time duration constants
+ *  All time define below are in miili seconds
+ */
+
+const int one_drop_time = 1104;
+const int one_drop_ml = 0.04; //ml in 1 drop
+const uint32_t DC_MOTOR_DURATION = 30000; // DC motor running duration
+const uint32_t PRIME_TIME = 27600;
+const uint32_t CLEAR_TIME = 72000;
+const uint32_t FLUSH_CW = 36000;  // Flushing in Clock wise
+const uint32_t FLUSH_CCW = 72000; // Flushing in Counter clock wise
+/*
+ * End of time duration constatnts
+ */
+
+
+
+uint32_t Max_Dosing_Duration = 0;
+uint32_t Remaining_Dosing_Duration = 0;
 
 unsigned long progess_last_update = 0;
 
@@ -159,7 +171,7 @@ byte L6[8] = {
   B11111,
 };
 
-String AlphabetMap[9] = {"ABC1", "DEF2", "GHI3", "JKL4", "MNO5", "PQR6", "STU7", "VWX8", "YZ.9"};
+const String AlphabetMap[9] = {"ABC1", "DEF2", "GHI3", "JKL4", "MNO5", "PQR6", "STU7", "VWX8", "YZ.9"};
 
 
 
@@ -168,10 +180,11 @@ String AlphabetMap[9] = {"ABC1", "DEF2", "GHI3", "JKL4", "MNO5", "PQR6", "STU7",
 #define RTC_DATA 12
 #define RTC_RESET 13
 virtuabotixRTC myRTC(RTC_CLK, RTC_DATA, RTC_RESET);
-int mth_key[12] = {1,3,3,0,2,5,0,3,6,1,4,6};
+const uint8_t mth_key[12] = {1,3,3,0,2,5,0,3,6,1,4,6};
 unsigned long last_rtc_update = 0;
 const uint16_t RTC_UPDATE_INTERVAL = 1000; // time im ms
 timeDayOfWeek_t weekDays[7] = {dowSunday, dowMonday, dowTuesday, dowWednesday, dowThursday, dowFriday, dowSaturday};
+const String weeaysNames[7] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 AlarmID_t AlarmIDs[7][3];
 typedef void (*function) () ;
 
@@ -197,7 +210,7 @@ bool generateRandom = true;
 bool Blink_state = false;
 unsigned long last_fade=0;
 unsigned long last_chase=0;
-int CHASE_DELAY = 100;
+const int CHASE_DELAY = 100;
 String LEDs_Status = "";
 unsigned long LastBlink = 0;
 const uint16_t BLINK_INTERVAL = 500;
@@ -358,7 +371,7 @@ void setup(){
 void loop(){
   if(StartSchedule){
     StartDose(Running_Schedule_Liquid, 1);
-    isScheduleRunning = true;
+    isDosing = isScheduleRunning = true;
   }
   else if(isScheduleRunning){
     Dosing();
