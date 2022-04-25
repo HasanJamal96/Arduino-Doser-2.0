@@ -42,7 +42,9 @@ void UpdateDHT(){
     ClearLCD(2,9,3,18);
     lcd.setCursor(9,2);
     lcd.print(temperature);
-    lcd.print(" C");
+    lcd.print(" ");
+    lcd.print((char)223);
+    lcd.print("C");
     lcd.setCursor(9,3);
     lcd.print(humidity);
     lcd.print(" rH%");
@@ -909,25 +911,22 @@ void ReadDisplayEditSchedule(){
         Dose_Shedules[last_selected_liquid][selected_schedule] = NS;
         writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], NS);
         writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], shed_drops.toInt());
-        uint8_t s_hrs = Dose_Shedules[last_selected_liquid][selected_schedule].substring(0,2).toInt();
-        uint8_t s_min = Dose_Shedules[last_selected_liquid][selected_schedule].substring(3,5).toInt();
-        uint8_t s_sec = Dose_Shedules[last_selected_liquid][selected_schedule].substring(6,8).toInt();
-        uint8_t s_dow = Dose_Shedules[last_selected_liquid][selected_schedule].substring(9,10).toInt();
-        if(AlarmIDs[last_selected_liquid][selected_schedule] == -1)
+        int s_hrs = Dose_Shedules[last_selected_liquid][selected_schedule].substring(0,2).toInt();
+        int s_min = Dose_Shedules[last_selected_liquid][selected_schedule].substring(3,5).toInt();
+        int s_sec = Dose_Shedules[last_selected_liquid][selected_schedule].substring(6,8).toInt();
+        uint8_t s_dow = Dose_Shedules[last_selected_liquid][selected_schedule].substring(9,10).toInt()-1;
+        if(s_dow > 7)
+          s_dow = 0;
+        if(AlarmIDs[last_selected_liquid][selected_schedule] != -1)
           Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
         AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
-        Serial.print("Schedule set: ");
-        Serial.print(s_hrs);
-        Serial.print(":");
-        Serial.print(s_min);
-        Serial.print(":");
-        Serial.print(s_sec);
-        Serial.print(" Dow: ");
-        Serial.print(weeaysNames[s_dow]);
         
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
-        lcd.print("Saved");
+        if(AlarmIDs[last_selected_liquid][selected_schedule] == 255)
+          Serial.println("Failed");
+        else
+          lcd.print("Saved");
         selected_schedule_menu = 0;
         Alarm.delay(2000);
         DisplayEditDose();

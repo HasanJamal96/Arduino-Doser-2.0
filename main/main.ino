@@ -101,6 +101,7 @@ const int Drops_Addr[7][3] = {357, 359, 361,
                               387, 389, 391,
                               393, 395, 397};
 
+
 const uint16_t LIQUID_UPDATE_AFTER = 10000;
 unsigned long liquid_last_update = 0;
 
@@ -356,6 +357,7 @@ void setup(){
   ReadSchedulesFromEEPROM();
   ReadNamesFromEEPROM();
   ReadLiquidVolumes();
+  setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.month, myRTC.dayofmonth, myRTC.year); //H:M:S,month, date, year
   AttatchSchedules();
   InitializeLCD();
   DisplayHomeScreen();
