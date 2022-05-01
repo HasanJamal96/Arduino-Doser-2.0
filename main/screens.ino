@@ -849,12 +849,14 @@ void DisplayEditSchedule(){
     lcd.print("Deleted");
     selected_schedule_menu = 0;
     lcd.noCursor();
-    Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
-    AlarmIDs[last_selected_liquid][selected_schedule] = -1;
-    Dose_Shedules[last_selected_liquid][selected_schedule] = "00,00,00:0";
-    Drops[last_selected_liquid][selected_schedule] = 0;
-    writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
-    writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
+    if(AlarmIDs[last_selected_liquid][selected_schedule] != 255){
+      Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
+      AlarmIDs[last_selected_liquid][selected_schedule] = 255;
+      Dose_Shedules[last_selected_liquid][selected_schedule] = "00,00,00:0";
+      Drops[last_selected_liquid][selected_schedule] = 0;
+      writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
+      writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
+    }
     Alarm.delay(1500);
     DisplayEditDose();
   }

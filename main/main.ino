@@ -371,6 +371,7 @@ void setup(){
 }
 
 void loop(){
+  Alarm.delay(1);
   if(StartSchedule){
     StartDose(Running_Schedule_Liquid, 1);
     isDosing = isScheduleRunning = true;

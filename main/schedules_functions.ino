@@ -144,6 +144,9 @@ void L1_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 1");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L1_S2(){
   if(!isScheduleRunning){
@@ -152,7 +155,9 @@ void L1_S2(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 1");
-    
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 void L1_S3(){
@@ -162,6 +167,9 @@ void L1_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 1");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -174,6 +182,9 @@ void L2_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 2");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L2_S2(){
   if(!isScheduleRunning){
@@ -183,6 +194,9 @@ void L2_S2(){
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 2");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L2_S3(){
   if(!isScheduleRunning){
@@ -191,6 +205,9 @@ void L2_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 2");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -203,6 +220,9 @@ void L3_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 3");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L3_S2(){
   if(!isScheduleRunning){
@@ -212,6 +232,9 @@ void L3_S2(){
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 3");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L3_S3(){
   if(!isScheduleRunning){
@@ -220,6 +243,9 @@ void L3_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 3");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -232,6 +258,9 @@ void L4_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 4");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L4_S2(){
   if(!isScheduleRunning){
@@ -241,6 +270,9 @@ void L4_S2(){
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 4");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L4_S3(){
   if(!isScheduleRunning){
@@ -249,6 +281,9 @@ void L4_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 4");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -261,6 +296,9 @@ void L5_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 5");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L5_S2(){
   if(!isScheduleRunning){
@@ -270,6 +308,9 @@ void L5_S2(){
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 5");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L5_S3(){
   if(!isScheduleRunning){
@@ -278,6 +319,9 @@ void L5_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 5");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -290,6 +334,9 @@ void L6_S1(){
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 6");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L6_S2(){
   if(!isScheduleRunning){
@@ -299,6 +346,9 @@ void L6_S2(){
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 6");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L6_S3(){
   if(!isScheduleRunning){
@@ -307,6 +357,9 @@ void L6_S3(){
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 6");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -319,6 +372,9 @@ void L7_S1(){
     activeStepper = 0;
     Serial.println("Starting Schedule 1 of Liquid 7");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L7_S2(){
   if(!isScheduleRunning){
@@ -328,6 +384,9 @@ void L7_S2(){
     activeStepper = 0;
     Serial.println("Starting Schedule 2 of Liquid 7");
   }
+  else{
+    Serial.println("Schedule alreeady running");
+  }
 }
 void L7_S3(){
   if(!isScheduleRunning){
@@ -336,6 +395,9 @@ void L7_S3(){
     StartSchedule = true;
     activeStepper = 0;
     Serial.println("Starting Schedule 3 of Liquid 7");
+  }
+  else{
+    Serial.println("Schedule alreeady running");
   }
 }
 
@@ -359,7 +421,7 @@ void AttatchSchedules(){
         AlarmIDs[x][i] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[x][i]);
       }
       else
-        AlarmIDs[x][i] = -1;
+        AlarmIDs[x][i] = 255;
     }
   }
   return;
