@@ -357,7 +357,14 @@ void setup(){
   ReadSchedulesFromEEPROM();
   ReadNamesFromEEPROM();
   ReadLiquidVolumes();
-  setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.month, myRTC.dayofmonth, myRTC.year); //H:M:S,month, date, year
+  myRTC.updateTime();
+  int myh = myRTC.hours;
+  int mym = myRTC.minutes;
+  int mys = myRTC.seconds;
+  int mymm = myRTC.month;
+  int mymd = myRTC.dayofmonth;
+  int myyy = myRTC.year;
+  setTime(myh, mym, mys, mymd, mymm, myyy); //H:M:S,date, month, year
   AttatchSchedules();
   InitializeLCD();
   DisplayHomeScreen();
@@ -373,8 +380,9 @@ void setup(){
 void loop(){
   Alarm.delay(1);
   if(StartSchedule){
-    StartDose(Running_Schedule_Liquid, 1);
+    StartDose(Running_Schedule_Liquid-1, 1);
     isDosing = isScheduleRunning = true;
+    StartSchedule = false;
   }
   else if(isScheduleRunning){
     Dosing();

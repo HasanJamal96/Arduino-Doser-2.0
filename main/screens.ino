@@ -193,6 +193,8 @@ void setRTCBeforeEdit(){
     
   if(myRTC.year == 0) y = "00";
   else y = String(myRTC.year);
+
+  
 }
 
 
@@ -212,10 +214,12 @@ void ReadRTCScreen(){
   char key = GetKey();
   if(key != '-'){
     if(key == '#'){
-      int year = mth.substring(2,4).toInt();
-      int month = mth.toInt();
-      int dow = ((year /4) + d.toInt() + mth_key[month-1] + 4 + year) % 4;
-      myRTC.setDS1302Time(s.toInt(), m.toInt(), h.toInt(), dow, d.toInt(), month, y.toInt());
+      int myear = mth.substring(2,4).toInt();
+      int mmonth = mth.toInt();
+      int dow = ((myear /4) + d.toInt() + mth_key[mmonth-1] + 4 + myear) % 4;
+      myRTC.setDS1302Time(s.toInt(), m.toInt(), h.toInt(), dow, d.toInt(), mmonth, y.toInt());
+      myRTC.updateTime();
+      setTime(h.toInt(), m.toInt(), s.toInt(), d.toInt(), mmonth,  y.toInt());
       lcd.noCursor();
       DisplayMenuScreen();
     }
