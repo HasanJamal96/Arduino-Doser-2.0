@@ -3,8 +3,10 @@ void StartDose(uint8_t L, uint8_t by){
   Accel_DC = true;
   ClearLeds();
   dc_speed = 0;
-  DosingPhase = "1";
+  if(L < 3 || L == 6)
+    DosingPhase = "1";
   LEDs_Status = "Chase2";
+  DosingLiquid = L;
   if(L < 3)
     which_dc = L;
   else if(L  == 6)
@@ -129,6 +131,7 @@ void EndDose(bool Normal){
     else
       usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
     Remaining_Liquid[DosingLiquid] -= usedDrops;
+    isFlush = isScheduleRunning = false;
     writeFloatIntoEEPROM(Remain_Liquid_Addr[DosingLiquid], Remaining_Liquid[DosingLiquid]);
   }
   DisplayHomeScreen();
@@ -139,7 +142,7 @@ void EndDose(bool Normal){
 void L1_S1(){
   if(!isScheduleRunning){
     Running_Schedule = 0;
-    Running_Schedule_Liquid = 1;
+    Running_Schedule_Liquid = 0;
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 1 of Liquid 1");
@@ -151,7 +154,7 @@ void L1_S1(){
 void L1_S2(){
   if(!isScheduleRunning){
     Running_Schedule = 1;
-    Running_Schedule_Liquid = 1;
+    Running_Schedule_Liquid = 0;
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 2 of Liquid 1");
@@ -163,7 +166,7 @@ void L1_S2(){
 void L1_S3(){
   if(!isScheduleRunning){
     Running_Schedule = 2;
-    Running_Schedule_Liquid = 1;
+    Running_Schedule_Liquid = 0;
     StartSchedule = true;
     activeStepper = 1;
     Serial.println("Starting Schedule 3 of Liquid 1");

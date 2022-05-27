@@ -7,6 +7,13 @@
 #include <virtuabotixRTC.h>
 #include <LiquidCrystal_I2C.h>
 
+/*
+Schedule type
+0 -> trigger only Once
+1 -> trigger only Once per week
+2 -> trigger daily, for this type no need to set weekday
+*/
+
 #define DEBUG true
 
 // Globals
@@ -101,6 +108,23 @@ const int Drops_Addr[7][3] = {357, 359, 361,
                               387, 389, 391,
                               393, 395, 397};
 
+
+const int schedule_Type_Addr[7][3] = {399, 400, 401,
+                                 402, 403, 404, 
+                                 405, 406, 407,
+                                 408, 409, 410,
+                                 411, 412, 413,
+                                 414, 415, 416,
+                                 417, 418, 419};
+
+
+char Schedule_Type[7][3]= {0,0,0,
+                           0,0,0,
+                           0,0,0,
+                           0,0,0,
+                           0,0,0,
+                           0,0,0,
+                           0,0,0};
 
 const uint16_t LIQUID_UPDATE_AFTER = 10000;
 unsigned long liquid_last_update = 0;
@@ -357,14 +381,9 @@ void setup(){
   ReadSchedulesFromEEPROM();
   ReadNamesFromEEPROM();
   ReadLiquidVolumes();
+  ReadScheduleTypes();
   myRTC.updateTime();
-  int myh = myRTC.hours;
-  int mym = myRTC.minutes;
-  int mys = myRTC.seconds;
-  int mymm = myRTC.month;
-  int mymd = myRTC.dayofmonth;
-  int myyy = myRTC.year;
-  setTime(myh, mym, mys, mymd, mymm, myyy); //H:M:S,date, month, year
+  setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.dayofmonth, myRTC.month, myRTC.year); //H:M:S,date, month, year
   AttatchSchedules();
   InitializeLCD();
   DisplayHomeScreen();
@@ -372,7 +391,6 @@ void setup(){
   ClearLeds();
 
   #ifdef DEBUG
-    Serial.println("[RTC] setting time ");
     Serial.println("[Main] Setup complete");
   #endif
 }
@@ -380,9 +398,25 @@ void setup(){
 void loop(){
   Alarm.delay(1);
   if(StartSchedule){
-    StartDose(Running_Schedule_Liquid-1, 1);
+    DosingLiquid = Running_Schedule_Liquid;
+    if(DosingLiquid > 2 && DosingLiquid != 6){
+      DosingPhase = "2";
+      StartPhase2();
+    }
+    else
+      StartDose(Running_Schedule_Liquid, 1);
     isDosing = isScheduleRunning = true;
     StartSchedule = false;
+    if(Schedule_Type[DosingLiquid][Running_Schedule] == '0'){
+      Alarm.disable(AlarmIDs[DosingLiquid][Running_Schedule]);
+      AlarmIDs[DosingLiquid][Running_Schedule] = 255;
+      
+      Dose_Shedules[DosingLiquid][Running_Schedule] = "00,00,00:0";
+      Drops[DosingLiquid][Running_Schedule] = 0;
+      
+      writeStringToEEPROM(Dose_Sched_Addr[DosingLiquid][Running_Schedule], "00,00,00:0");
+      writeIntIntoEEPROM(Drops_Addr[DosingLiquid][Running_Schedule], 0);
+    }
   }
   else if(isScheduleRunning){
     Dosing();

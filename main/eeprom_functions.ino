@@ -27,6 +27,15 @@ void writeStringToEEPROM(int addr, const String &strToWrite){
   }
 }
 
+
+void ReadScheduleTypes(){
+  for (uint8_t x=0; x<7; x++){
+    for (uint8_t i=0; i<3; i++){
+      Schedule_Type[x][i] = EEPROM.read(schedule_Type_Addr[x][i]);
+    }
+  }
+}
+
 String readStringFromEEPROM(int addr, int len){
   char read_data[len];
   for (int i = 0; i < len; i++){

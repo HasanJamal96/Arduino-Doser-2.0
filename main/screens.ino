@@ -781,6 +781,8 @@ String shed_drops = "";
 uint8_t x_shed_pos = 2;
 uint8_t drop_crs = 0;
 const uint8_t dropLen = 3;
+char NST = '0';
+
 
 void ReadEditDose(){
   char key = GetKey();
@@ -790,8 +792,9 @@ void ReadEditDose(){
       if(selected_schedule_menu != 0){
         lcd.cursor();
         shed_drops = String(Drops[last_selected_liquid][selected_schedule]);
-        if(shed_drops.length() < 3)
-          shed_drops += "  ";
+        NST = Schedule_Type[last_selected_liquid][selected_schedule];
+        while(shed_drops.length() < 3)
+          shed_drops = "0" + shed_drops;
       }
       sche_cur_pos = 2;
       x_shed_pos = 2;
@@ -819,6 +822,7 @@ void ReadEditDose(){
 }
 
 
+
 void DisplayEditSchedule(){
   last_screen = current_screen = "Dosing3";
   lcd.clear();
@@ -832,6 +836,11 @@ void DisplayEditSchedule(){
     lcd.setCursor(0,2);
     lcd.print("Drops: ");
     lcd.print(Drops[last_selected_liquid][selected_schedule]);
+    lcd.setCursor(12,2);
+    lcd.print("Type: ");
+    NST = Schedule_Type[last_selected_liquid][selected_schedule];
+    Serial.println(NST);
+    lcd.print(NST);
     lcd.setCursor(0,3);
     String sched = Dose_Shedules[last_selected_liquid][selected_schedule];
     lcd.print("H:" + sched.substring(0,2) + " M:" + sched.substring(3,5) + " S:" + sched.substring(6,8) + " DOW:" + sched.substring(9,10));
@@ -841,6 +850,9 @@ void DisplayEditSchedule(){
     lcd.print("New Schedule");
     lcd.setCursor(0,2);
     lcd.print("Drops: " + shed_drops);
+    lcd.setCursor(12,2);
+    lcd.print("Type: ");
+    lcd.print(NST);
     lcd.setCursor(0,3);
     lcd.print("H:" + NS.substring(0,2) + " M:" + NS.substring(3,5) + " S:" + NS.substring(6,8) + " DOW:" + NS.substring(9,10));
     if(x_shed_pos == 3)
@@ -860,6 +872,8 @@ void DisplayEditSchedule(){
       Drops[last_selected_liquid][selected_schedule] = 0;
       writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
       writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
+      Schedule_Type[last_selected_liquid][selected_schedule] = '0';
+      EEPROM.write(schedule_Type_Addr[last_selected_liquid][selected_schedule], '0');
     }
     Alarm.delay(1500);
     DisplayEditDose();
@@ -882,8 +896,10 @@ void UpdateScheduleCursor(char which_way){
     }
     else{
       drop_crs += 1;
-      if(drop_crs > 9)
+      if(drop_crs > 18)
         drop_crs = 7;
+      else if(drop_crs > 9)
+        drop_crs = 18;
       lcd.setCursor(drop_crs,2);
     }
   }
@@ -902,6 +918,8 @@ void UpdateScheduleCursor(char which_way){
     else{
       drop_crs -= 1;
       if(drop_crs < 7)
+        drop_crs = 18;
+      else if(drop_crs < 18 && drop_crs > 15)
         drop_crs = 9;
       lcd.setCursor(drop_crs,2);
     }
@@ -921,11 +939,18 @@ void ReadDisplayEditSchedule(){
         int s_min = Dose_Shedules[last_selected_liquid][selected_schedule].substring(3,5).toInt();
         int s_sec = Dose_Shedules[last_selected_liquid][selected_schedule].substring(6,8).toInt();
         uint8_t s_dow = Dose_Shedules[last_selected_liquid][selected_schedule].substring(9,10).toInt()-1;
+        Schedule_Type[last_selected_liquid][selected_schedule] = NST;
+        Drops[last_selected_liquid][selected_schedule] = shed_drops.toInt();
         if(s_dow > 7)
           s_dow = 0;
         if(AlarmIDs[last_selected_liquid][selected_schedule] != -1)
           Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
-        AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
+        if(NST == '0')
+          AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmOnce(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
+        else if(NST == '1')
+          AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
+        else if(NST == '2')
+          AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmRepeat(s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
         
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
@@ -990,8 +1015,16 @@ void ReadDisplayEditSchedule(){
           }
         }
         else{
-          shed_drops.setCharAt(drop_crs-7, key);
-          UpdateScheduleCursor('C');
+          if(drop_crs == 18){
+            int k = key - '0';
+            if(k < 3){
+              NST = key;
+            }
+          }
+          else{
+            shed_drops.setCharAt(drop_crs-7, key);
+            UpdateScheduleCursor('C');
+          }
         }
         DisplayEditSchedule();
       }
@@ -1045,6 +1078,18 @@ void ReadQuickDoseScreen(){
         EditDosingQuantity();
       }
       else{
+        if(isScheduleRunning){
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print("Unable to start");
+          lcd.setCursor(7,1);
+          lcd.print("Dosing");
+          lcd.setCursor(2,2);
+          lcd.print("Schedule Running");
+          Alarm.delay(2000);
+          DisplayQuickDoseScreen();
+          return;
+        }
         DosingPhase = "2";
         DosingLiquid = last_selected_liquid;
         activeStepper = 0;
