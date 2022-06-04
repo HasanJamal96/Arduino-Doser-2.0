@@ -116,7 +116,7 @@ void LedsLoopCode(){
         Blink_state = true;
     }
   }
-  else if(LEDs_Status == "Fade"){
+  else if(LEDs_Status == "Fade" && !isScheduleRunning && !isDosing){
     if(millis() - last_fade >= 50){
       FadeLeds();
       last_fade = millis();

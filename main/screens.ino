@@ -839,7 +839,6 @@ void DisplayEditSchedule(){
     lcd.setCursor(12,2);
     lcd.print("Type: ");
     NST = Schedule_Type[last_selected_liquid][selected_schedule];
-    Serial.println(NST);
     lcd.print(NST);
     lcd.setCursor(0,3);
     String sched = Dose_Shedules[last_selected_liquid][selected_schedule];
@@ -955,7 +954,7 @@ void ReadDisplayEditSchedule(){
         ClearLCD(2,0,3,19);
         lcd.setCursor(7,2);
         if(AlarmIDs[last_selected_liquid][selected_schedule] == 255)
-          Serial.println("Failed");
+          lcd.print("Failed");
         else
           lcd.print("Saved");
         selected_schedule_menu = 0;
@@ -1252,6 +1251,9 @@ void ReadProgressScreen(){
   char key = GetKey();
   if(key != '-'){
     if(key == '*'){
+      quik_menu_select = 0;
+      selected_menu = last_selected_liquid = 0;
+      QDQ = "";
       EndDose(false);
     }
   }

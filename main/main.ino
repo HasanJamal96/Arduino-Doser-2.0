@@ -1,3 +1,10 @@
+#define DEBUG // Comment this line to stop dubug messages
+
+#ifdef DEBUG
+  #define BAUDRATE 115200
+#endif
+
+
 #include "DHT.h"
 #include <Wire.h>
 #include <Keypad.h>
@@ -14,7 +21,7 @@ Schedule type
 2 -> trigger daily, for this type no need to set weekday
 */
 
-#define DEBUG true
+
 
 // Globals
 String current_screen = "Home";
@@ -29,7 +36,7 @@ unsigned long DosePhase5 = 0;
 uint8_t DosingLiquid = 0;
 bool isDosing = false;
 uint8_t selected_liquid = 0;
-int qdq = 0;
+uint32_t qdq = 0;
 uint8_t Running_Schedule = 0;
 uint8_t Running_Schedule_Liquid = 0;
 bool isScheduleRunning = false;
@@ -50,7 +57,7 @@ const int ACCEL_AFTER = 100;
  *  All time define below are in miili seconds
  */
 
-const int one_drop_time = 1104;
+const uint32_t one_drop_time = 1104;
 const int one_drop_ml = 0.04; //ml in 1 drop
 const uint32_t DC_MOTOR_DURATION = 30000; // DC motor running duration
 const uint32_t PRIME_TIME = 27600;
@@ -322,10 +329,10 @@ bool read_dht(){
   }
   else{
     #ifdef DEBUG
-      /*Serial.print("\n[DHT] Temperature: ");
+      Serial.print("\n[DHT] Temperature: ");
       Serial.print(temperature);
       Serial.print(" Humidity: ");
-      Serial.println(humidity);*/
+      Serial.println(humidity);
     #endif
     return true;
   }
@@ -355,15 +362,24 @@ void InitializeLCD(){
 
 
 void ResetAllSchedules(){
+  #ifdef DEBUG
+    Serial.println("[EEPROM] Resetting all schedules");
+  #endif
   for (uint8_t x=0; x<7; x++){
     for (uint8_t i=0; i<3; i++){
-      Dose_Shedules[x][i] = "12,34,11:1";
+      Dose_Shedules[x][i] = "00,00,00:0";
       writeStringToEEPROM(Dose_Sched_Addr[x][i], Dose_Shedules[x][i]);
     } 
   }
+  #ifdef DEBUG
+    Serial.println("[EEPROM] All schedules have been reset");
+  #endif
 }
 
 void ReadLiquidVolumes(){
+  #ifdef DEBUG
+    Serial.println("[EEPROM] Reading saved liquid volumes");
+  #endif
   for(uint8_t x=0; x<7; x++){
     Total_Liquid[x] = readFloatFromEEPROM(Total_Liquid_Addr[x]);
     Remaining_Liquid[x] = readFloatFromEEPROM(Remain_Liquid_Addr[x]);
@@ -374,21 +390,30 @@ void ReadLiquidVolumes(){
 
 void setup(){
   #ifdef DEBUG
-    Serial.begin(115200);
+    Serial.begin(BAUDRATE);
     Serial.println("[Main] Setup started");
   #endif
   InitializePins();
+  #ifdef DEBUG
+    Serial.println("[EEPROM] Reading configurations");
+  #endif
   ReadSchedulesFromEEPROM();
   ReadNamesFromEEPROM();
   ReadLiquidVolumes();
   ReadScheduleTypes();
+  #ifdef DEBUG
+    Serial.println("[EEPROM] Configurations successfully raed");
+  #endif
+  #ifdef DEBUG
+    Serial.println("[RTC] Updating controllers time with RTC time");
+  #endif
   myRTC.updateTime();
   setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.dayofmonth, myRTC.month, myRTC.year); //H:M:S,date, month, year
   AttatchSchedules();
   InitializeLCD();
+  ClearLeds();
   DisplayHomeScreen();
   SetKeypadParams();
-  ClearLeds();
 
   #ifdef DEBUG
     Serial.println("[Main] Setup complete");

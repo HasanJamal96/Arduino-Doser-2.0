@@ -12,11 +12,12 @@ void StartDose(uint8_t L, uint8_t by){
   else if(L  == 6)
     which_dc = 3;
   if(by == 0){
-    DosingTime = qdq * one_drop_time;
+    DosingTime = (qdq * one_drop_time);
     isDosing = true;
   }
   else{
-    DosingTime = Drops[Running_Schedule_Liquid][Running_Schedule] * one_drop_time;
+    uint32_t d = Drops[Running_Schedule_Liquid][Running_Schedule];
+    DosingTime = d * one_drop_time;
   }
   if(L < 3 || L == 6)
     Max_Dosing_Duration = DC_MOTOR_DURATION + PRIME_TIME + CLEAR_TIME + FLUSH_CW + FLUSH_CCW + DosingTime;
