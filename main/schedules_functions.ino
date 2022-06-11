@@ -1,16 +1,18 @@
 void StartDose(uint8_t L, uint8_t by){
   Serial.println("Dosing sequence start");
-  Accel_DC = true;
   ClearLeds();
-  dc_speed = 0;
-  if(L < 3 || L == 6)
-    DosingPhase = "1";
-  LEDs_Status = "Chase2";
   DosingLiquid = L;
-  if(L < 3)
-    which_dc = L;
-  else if(L  == 6)
-    which_dc = 3;
+  dc_speed = 0;
+  if(L < 3 || L == 6){
+    DosingPhase = "1";
+    LEDs_Status = "Chase2";
+    if(L < 3)
+      which_dc = L;
+    else if(L  == 6)
+      which_dc = 3;
+    Accel_DC = true;
+  }
+  
   if(by == 0){
     DosingTime = (qdq * one_drop_time);
     isDosing = true;
@@ -19,12 +21,12 @@ void StartDose(uint8_t L, uint8_t by){
     uint32_t d = Drops[Running_Schedule_Liquid][Running_Schedule];
     DosingTime = d * one_drop_time;
   }
-  if(L < 3 || L == 6)
-    Max_Dosing_Duration = DC_MOTOR_DURATION + PRIME_TIME + CLEAR_TIME + FLUSH_CW + FLUSH_CCW + DosingTime;
-  else
-    Max_Dosing_Duration = PRIME_TIME + CLEAR_TIME + FLUSH_CW + FLUSH_CCW + DosingTime;
+  
   Remaining_Dosing_Duration = Max_Dosing_Duration;
   DoseStartTime = millis();
+  if(L > 2 && L < 6){
+    StartPhase2();
+  }
 }
 
 void Dosing(){
@@ -44,7 +46,12 @@ void Dosing(){
       }
     }
     else if(DosingPhase == "2"){
-      if(millis() - DosePhase2 >= PRIME_TIME + DosingTime){
+      uint32_t prime_time;
+      if(DosingLiquid != 6)
+        prime_time = PRIME_TIME;
+      else
+        prime_time = PRIME_TIME_7;
+      if(millis() - DosePhase2 >= prime_time + DosingTime){
         ActivateStepper(activeStepper, 0);
         DosingPhase = "3";
         DosePhase3 = millis();
@@ -116,25 +123,55 @@ void EndDose(bool Normal){
   Serial.println("End Dosing");
   DeactivateStepper(activeStepper);
   digitalWrite(MOSFET_PINS[7], LOW);
-  float usedDrops = 0;
   current_screen = "Home";
   isDosing = false; 
-  DosingPhase = "-1";
   if(!isFlush){
+    float usedDrops = 0;
     if(!Normal){
-      if(DosingLiquid < 3 || DosingLiquid == 6){
-        DosingTime = millis() - DoseStartTime - DC_MOTOR_DURATION - PRIME_TIME;
-        if(DosingTime > 0){
-          usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
+      int phase = DosingPhase.toInt();
+      if(phase > 1){
+        if(phase == 2){
+          unsigned long TimePassed;
+          TimePassed = millis() - DoseStartTime;
+          if(TimePassed - PRIME_TIME > 0 || TimePassed - PRIME_TIME_7 > 0){
+            if(DosingLiquid < 3 || DosingLiquid == 6){
+              if(DosingLiquid == 6)
+                DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME);
+              else
+                DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME_7);
+            }
+            else
+              DosingTime = TimePassed - PRIME_TIME;
+          }
         }
+        else{
+          DosingTime = (qdq * one_drop_time);
+        }
+        if(DosingTime > 0)
+          usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
+        else
+          usedDrops = 0;
       }
     }
     else
       usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
+    
+    #ifdef DEBUG
+      Serial.print("Calculated drops used: ");
+      Serial.println(usedDrops);
+      Serial.print("Liquid volume Before: ");
+      Serial.println(Remaining_Liquid[DosingLiquid]);
+    #endif
     Remaining_Liquid[DosingLiquid] -= usedDrops;
+    #ifdef DEBUG
+      Serial.print("Liquid volume After: ");
+      Serial.println(Remaining_Liquid[DosingLiquid]);
+    #endif
     isFlush = isScheduleRunning = false;
-    writeFloatIntoEEPROM(Remain_Liquid_Addr[DosingLiquid], Remaining_Liquid[DosingLiquid]);
+    if(usedDrops != 0)
+      writeFloatIntoEEPROM(Remain_Liquid_Addr[DosingLiquid], Remaining_Liquid[DosingLiquid]);
   }
+  DosingPhase = "-1";
   DisplayHomeScreen();
 }
 

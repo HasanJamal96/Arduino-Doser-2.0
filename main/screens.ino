@@ -958,7 +958,7 @@ void ReadDisplayEditSchedule(){
         else
           lcd.print("Saved");
         selected_schedule_menu = 0;
-        Alarm.delay(2000);
+        Alarm.delay(1000);
         DisplayEditDose();
       }
       else if(key == 'A'){
@@ -1085,22 +1085,15 @@ void ReadQuickDoseScreen(){
           lcd.print("Dosing");
           lcd.setCursor(2,2);
           lcd.print("Schedule Running");
-          Alarm.delay(2000);
+          Alarm.delay(1000);
           DisplayQuickDoseScreen();
           return;
         }
-        DosingPhase = "2";
         DosingLiquid = last_selected_liquid;
         activeStepper = 0;
         if(last_selected_liquid != 6)
           activeStepper = 1;
-        if(last_selected_liquid < 3 || last_selected_liquid == 6){
-          StartDose(last_selected_liquid, 0);
-        }
-        else{
-          Max_Dosing_Duration -= DC_MOTOR_DURATION;
-          StartPhase2();
-        }
+        StartDose(last_selected_liquid, 0);
         ProgressScreen();
       }
     }
@@ -1181,9 +1174,9 @@ void DisplayFluchScreen(){
   lcd.print("Flush");
   lcd.setCursor(0,flush_menu_select+1);
   lcd.print('>');
-  lcd.setCursor(1,0);
-  lcd.print("Small Line");
   lcd.setCursor(1,1);
+  lcd.print("Small Line");
+  lcd.setCursor(1,2);
   lcd.print("Large Line");
 }
 

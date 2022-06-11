@@ -1,4 +1,5 @@
 #define DEBUG // Comment this line to stop dubug messages
+//#define SHOW_DHT_OUTPUT
 
 #ifdef DEBUG
   #define BAUDRATE 115200
@@ -52,15 +53,40 @@ unsigned long last_accel = 0;
 const int ACCEL_AFTER = 100;
 
 
+/*
+ *  provided that stepper required 18 sec at 600 steps/sec for 25 drops
+ *  and 1 ml = 25 drops
+ *  
+ *  calculations:
+ *    1 drop = 1ml/25
+ *    1 drop = 0.04 ml
+ *  
+ *    600 steps/sec for 18 sec to do 25 drops
+ *    total steps in 18 sec
+ *      600*18
+ *      10800 to do 25 drops
+ *  
+ *  arduino is providing 490 steps/sec
+ *  
+ *  so at 490
+ *    10800 steps require (10800/490) = 22.04 sec
+ *  
+ *  so for 1 drop at 490, time required is:
+ *    25 drops = 22.04
+ *    1 drop = (22.04/25) = 881.6 milli sec
+ */
+
+
 /* 
  *  Time duration constants
  *  All time define below are in miili seconds
+ *  
  */
-
-const uint32_t one_drop_time = 1104;
-const int one_drop_ml = 0.04; //ml in 1 drop
+const float one_drop_time = 881.6; // 
+const float one_drop_ml = 0.04; //1 drop = 0.04ml
 const uint32_t DC_MOTOR_DURATION = 30000; // DC motor running duration
 const uint32_t PRIME_TIME = 27600;
+const uint32_t PRIME_TIME_7 = 27600;
 const uint32_t CLEAR_TIME = 72000;
 const uint32_t FLUSH_CW = 36000;  // Flushing in Clock wise
 const uint32_t FLUSH_CCW = 72000; // Flushing in Counter clock wise
@@ -75,7 +101,7 @@ uint32_t Remaining_Dosing_Duration = 0;
 
 unsigned long progess_last_update = 0;
 
-uint32_t DosingTime = 0;
+int32_t DosingTime = 0;
 String DosingPhase = "0";
 
 
@@ -328,7 +354,7 @@ bool read_dht(){
     return false;
   }
   else{
-    #ifdef DEBUG
+    #ifdef SHOW_DHT_OUTPUT
       Serial.print("\n[DHT] Temperature: ");
       Serial.print(temperature);
       Serial.print(" Humidity: ");
@@ -424,12 +450,7 @@ void loop(){
   Alarm.delay(1);
   if(StartSchedule){
     DosingLiquid = Running_Schedule_Liquid;
-    if(DosingLiquid > 2 && DosingLiquid != 6){
-      DosingPhase = "2";
-      StartPhase2();
-    }
-    else
-      StartDose(Running_Schedule_Liquid, 1);
+    StartDose(Running_Schedule_Liquid, 1);
     isDosing = isScheduleRunning = true;
     StartSchedule = false;
     if(Schedule_Type[DosingLiquid][Running_Schedule] == '0'){
