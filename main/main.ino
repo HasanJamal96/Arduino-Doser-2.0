@@ -23,11 +23,13 @@ Schedule type
 */
 
 
-
 // Globals
 String current_screen = "Home";
 String last_screen = "Home";
 unsigned long last_activity = 0;
+unsigned long LastSync = 0;
+const unsigned long SYNC_AFTER = 1; // time in hours
+
 
 unsigned long DoseStartTime = 0;
 unsigned long DosePhase2 = 0;
@@ -436,6 +438,7 @@ void setup(){
   myRTC.updateTime();
   setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.dayofmonth, myRTC.month, myRTC.year); //H:M:S,date, month, year
   AttatchSchedules();
+  LastSync = millis()/1000;
   InitializeLCD();
   ClearLeds();
   DisplayHomeScreen();
@@ -542,4 +545,21 @@ void loop(){
     ReadProgressScreen();
   }
   LedsLoopCode();
+  if(millis() - LastSync >= (SYNC_AFTER*60*60)){
+    doSync();
+    LastSync = millis()/1000;
+  }
+}
+
+void doSync(){
+  #ifdef DEBUG
+    Serial.println("[RTC] Syncing arduino's time with RTC");
+    Serial.println("[RTC] If schedule occur during syncing it will not perform its function");
+  #endif
+  myRTC.updateTime();
+  setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.dayofmonth, myRTC.month, myRTC.year);
+  AttatchSchedules();
+  #ifdef DEBUG
+    Serial.println("[RTC] Syncing complete");
+  #endif
 }
