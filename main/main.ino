@@ -545,7 +545,7 @@ void loop(){
     ReadProgressScreen();
   }
   LedsLoopCode();
-  if(millis() - LastSync >= (SYNC_AFTER*60*60)){
+  if(millis()/1000 - LastSync >= (SYNC_AFTER*60*60)){
     doSync();
     LastSync = millis()/1000;
   }
