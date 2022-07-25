@@ -545,7 +545,7 @@ void loop(){
     ReadProgressScreen();
   }
   LedsLoopCode();
-  if(millis() - LastSync >= (SYNC_AFTER*60*60)){
+  if(millis()/1000 - LastSync >= (SYNC_AFTER*60*60)){
     doSync();
     LastSync = millis()/1000;
   }
@@ -556,10 +556,23 @@ void doSync(){
     Serial.println("[RTC] Syncing arduino's time with RTC");
     Serial.println("[RTC] If schedule occur during syncing it will not perform its function");
   #endif
+  freeSheculesIDs();
   myRTC.updateTime();
   setTime(myRTC.hours, myRTC.minutes, myRTC.seconds, myRTC.dayofmonth, myRTC.month, myRTC.year);
   AttatchSchedules();
   #ifdef DEBUG
     Serial.println("[RTC] Syncing complete");
   #endif
+}
+
+
+void freeSheculesIDs(){
+  for (uint8_t x=0; x<7; x++){
+    for (uint8_t i=0; i<3; i++){
+      if(AlarmIDs[x][i] != 255){
+        Alarm.free(AlarmIDs[x][i]);
+        AlarmIDs[x][i] = 255;
+      }
+    }
+  }
 }
