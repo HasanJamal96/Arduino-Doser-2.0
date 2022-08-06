@@ -838,7 +838,7 @@ void DisplayEditSchedule(){
     lcd.print(Drops[last_selected_liquid][selected_schedule]);
     lcd.setCursor(12,2);
     lcd.print("Type: ");
-    NST = Schedule_Type[last_selected_liquid][selected_schedule];
+    NST = Schedule_Type[last_selected_liquid][selected_schedule] + '0';
     lcd.print(NST);
     lcd.setCursor(0,3);
     String sched = Dose_Shedules[last_selected_liquid][selected_schedule];
@@ -865,14 +865,14 @@ void DisplayEditSchedule(){
     selected_schedule_menu = 0;
     lcd.noCursor();
     if(AlarmIDs[last_selected_liquid][selected_schedule] != 255){
-      Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
+      Alarm.free(AlarmIDs[last_selected_liquid][selected_schedule]);
       AlarmIDs[last_selected_liquid][selected_schedule] = 255;
       Dose_Shedules[last_selected_liquid][selected_schedule] = "00,00,00:0";
       Drops[last_selected_liquid][selected_schedule] = 0;
       writeStringToEEPROM(Dose_Sched_Addr[last_selected_liquid][selected_schedule], "00,00,00:0");
       writeIntIntoEEPROM(Drops_Addr[last_selected_liquid][selected_schedule], 0);
-      Schedule_Type[last_selected_liquid][selected_schedule] = '0';
-      EEPROM.write(schedule_Type_Addr[last_selected_liquid][selected_schedule], '0');
+      Schedule_Type[last_selected_liquid][selected_schedule] = 0;
+      EEPROM.write(schedule_Type_Addr[last_selected_liquid][selected_schedule], 0);
     }
     Alarm.delay(1500);
     DisplayEditDose();
@@ -938,12 +938,13 @@ void ReadDisplayEditSchedule(){
         int s_min = Dose_Shedules[last_selected_liquid][selected_schedule].substring(3,5).toInt();
         int s_sec = Dose_Shedules[last_selected_liquid][selected_schedule].substring(6,8).toInt();
         uint8_t s_dow = Dose_Shedules[last_selected_liquid][selected_schedule].substring(9,10).toInt()-1;
-        Schedule_Type[last_selected_liquid][selected_schedule] = NST;
+        Schedule_Type[last_selected_liquid][selected_schedule] = NST - '0';
+        EEPROM.update(schedule_Type_Addr[last_selected_liquid][selected_schedule], Schedule_Type[last_selected_liquid][selected_schedule]);
         Drops[last_selected_liquid][selected_schedule] = shed_drops.toInt();
         if(s_dow > 7)
           s_dow = 0;
         if(AlarmIDs[last_selected_liquid][selected_schedule] != -1)
-          Alarm.disable(AlarmIDs[last_selected_liquid][selected_schedule]);
+          Alarm.free(AlarmIDs[last_selected_liquid][selected_schedule]);
         if(NST == '0')
           AlarmIDs[last_selected_liquid][selected_schedule] = Alarm.alarmOnce(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[last_selected_liquid][selected_schedule]);
         else if(NST == '1')

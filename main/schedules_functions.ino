@@ -459,12 +459,12 @@ void AttatchSchedules(){
         uint8_t s_min = Dose_Shedules[x][i].substring(3,5).toInt();
         uint8_t s_sec = Dose_Shedules[x][i].substring(6,8).toInt();
         uint8_t s_dow = Dose_Shedules[x][i].substring(9,10).toInt();
-        if(Schedule_Type[x][i] == '0')
+        if(Schedule_Type[x][i] == 0)
           AlarmIDs[x][i] = Alarm.alarmOnce(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[x][i]);
-        else if(Schedule_Type[x][i] == '1')
+        else if(Schedule_Type[x][i] == 1)
           AlarmIDs[x][i] = Alarm.alarmRepeat(weekDays[s_dow], s_hrs, s_min, s_sec, AlarmFunction[x][i]);
-        else if(Schedule_Type[x][i] == '2')
-          AlarmIDs[x][i] = Alarm.alarmRepeat(s_hrs, s_min, s_sec, AlarmFunction[x][i]);
+        else if(Schedule_Type[x][i] == 2)
+          AlarmIDs[x][i] = Alarm.alarmRepeat(s_hrs, s_min, s_sec, AlarmFunction[x][i]);       
       }
       else
         AlarmIDs[x][i] = 255;

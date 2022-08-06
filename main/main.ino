@@ -153,7 +153,7 @@ const int schedule_Type_Addr[7][3] = {399, 400, 401,
                                  417, 418, 419};
 
 
-char Schedule_Type[7][3]= {0,0,0,
+uint8_t Schedule_Type[7][3]= {0,0,0,
                            0,0,0,
                            0,0,0,
                            0,0,0,

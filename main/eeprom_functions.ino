@@ -47,7 +47,7 @@ String readStringFromEEPROM(int addr, int len){
 void ReadSchedulesFromEEPROM(){
   for (uint8_t x=0; x<7; x++){
     for (uint8_t i=0; i<3; i++){
-      Dose_Shedules[x][i] = readStringFromEEPROM(Dose_Sched_Addr[x][i], 10);
+      Dose_Shedules[x][i] = readStringFromEEPROM(Dose_Sched_Addr[x][i], 10).substring(0,10);
       Drops[x][i] = readIntFromEEPROM(Drops_Addr[x][i]);
     }
   }
