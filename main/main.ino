@@ -456,8 +456,8 @@ void loop(){
     StartDose(Running_Schedule_Liquid, 1);
     isDosing = isScheduleRunning = true;
     StartSchedule = false;
-    if(Schedule_Type[DosingLiquid][Running_Schedule] == '0'){
-      Alarm.disable(AlarmIDs[DosingLiquid][Running_Schedule]);
+    if(Schedule_Type[DosingLiquid][Running_Schedule] == 0){
+      Alarm.free(AlarmIDs[DosingLiquid][Running_Schedule]);
       AlarmIDs[DosingLiquid][Running_Schedule] = 255;
       
       Dose_Shedules[DosingLiquid][Running_Schedule] = "00,00,00:0";

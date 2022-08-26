@@ -127,34 +127,36 @@ void EndDose(bool Normal){
   isDosing = false; 
   if(!isFlush){
     float usedDrops = 0;
-    if(!Normal){
-      int phase = DosingPhase.toInt();
-      if(phase > 1){
-        if(phase == 2){
-          unsigned long TimePassed;
-          TimePassed = millis() - DoseStartTime;
-          if(TimePassed - PRIME_TIME > 0 || TimePassed - PRIME_TIME_7 > 0){
-            if(DosingLiquid < 3 || DosingLiquid == 6){
-              if(DosingLiquid == 6)
-                DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME);
+    if(Remaining_Liquid[DosingLiquid] > 0){
+      if(!Normal){
+        int phase = DosingPhase.toInt();
+        if(phase > 1){
+          if(phase == 2){
+            unsigned long TimePassed;
+            TimePassed = millis() - DoseStartTime;
+            if(TimePassed - PRIME_TIME > 0 || TimePassed - PRIME_TIME_7 > 0){
+              if(DosingLiquid < 3 || DosingLiquid == 6){
+                if(DosingLiquid == 6)
+                  DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME);
+                else
+                  DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME_7);
+              }
               else
-                DosingTime = TimePassed - (DC_MOTOR_DURATION + PRIME_TIME_7);
+                DosingTime = TimePassed - PRIME_TIME;
             }
-            else
-              DosingTime = TimePassed - PRIME_TIME;
           }
+          else{
+            DosingTime = (qdq * one_drop_time);
+          }
+          if(DosingTime > 0)
+            usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
+          else
+            usedDrops = 0;
         }
-        else{
-          DosingTime = (qdq * one_drop_time);
-        }
-        if(DosingTime > 0)
-          usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
-        else
-          usedDrops = 0;
       }
+      else
+        usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
     }
-    else
-      usedDrops = (DosingTime/one_drop_time) * one_drop_ml;
     
     #ifdef DEBUG
       Serial.print("Calculated drops used: ");
@@ -163,6 +165,9 @@ void EndDose(bool Normal){
       Serial.println(Remaining_Liquid[DosingLiquid]);
     #endif
     Remaining_Liquid[DosingLiquid] -= usedDrops;
+    if(Remaining_Liquid[DosingLiquid] < 0){
+      Remaining_Liquid[DosingLiquid] = 0;
+    }
     #ifdef DEBUG
       Serial.print("Liquid volume After: ");
       Serial.println(Remaining_Liquid[DosingLiquid]);
@@ -173,6 +178,7 @@ void EndDose(bool Normal){
   }
   DosingPhase = "-1";
   DisplayHomeScreen();
+  isScheduleRunning = false;
 }
 
 
